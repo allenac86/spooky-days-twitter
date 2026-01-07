@@ -1,0 +1,47 @@
+name: spooky-days ci
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_OUTPUT: json
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: List Contents
+        run: ls -la
+      - name: Package Zip Files
+        run: |
+          zip -r image_gen_2.${{ github.run_id }}.${{ github.run_attempt }}.zip image_gen.py national-days.json
+          zip -r twitter_post_2.${{ github.run_id }}.${{ github.run_attempt }}.zip twitter_post.py
+          ls -la
+      - name: Upload Zip Files to S3
+        run: |
+          aws s3 cp image_gen_2.${{ github.run_id }}.${{ github.run_attempt }}.zip ${{ secrets.S3_BUCKET }}
+          aws s3 cp twitter_post_2.${{ github.run_id }}.${{ github.run_attempt }}.zip ${{ secrets.S3_BUCKET }}
+      - name: Update Image Gen TFE Variable
+        run: |
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen_2.${{ github.run_id }}.${{ github.run_attempt }}.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
+      - name: Update Twitter TFE Variable
+        run: |
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_KEY }}","value":"twitter_post_2.${{ github.run_id }}.${{ github.run_attempt }}.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+      - name: Trigger spooky-days-iac Terraform Workflow
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/allenac86/spooky-days-twitter-iac/actions/workflows/deploy.yml/dispatches -d '{"ref":"main"}'
