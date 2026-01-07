@@ -8,16 +8,16 @@ pipeline{
 
     parameters {
         booleanParam(defaultValue: false, description: 'Zip Image Gen Lambda Code', name: 'ZIP_IMAGE')
-        booleanParam(defaultValue: false, description: 'Zip Insta Post Lambda Code', name: 'ZIP_INSTA')
+        booleanParam(defaultValue: false, description: 'Zip twitter Post Lambda Code', name: 'ZIP_twitter')
         booleanParam(defaultValue: false, description: 'Upload Image Gen Zip to S3', name: 'IMAGE_S3_UPLOAD')
-        booleanParam(defaultValue: false, description: 'Upload Insta Post Zip to S3', name: 'INSTA_S3_UPLOAD')
+        booleanParam(defaultValue: false, description: 'Upload twitter Post Zip to S3', name: 'twitter_S3_UPLOAD')
         booleanParam(defaultValue: false, description: 'Update Terraform Variables', name: 'UPDATE_TF_VAR')
         booleanParam(defaultValue: false, description: 'Apply Terraform Configuration', name: 'TERRAFORM_APPLY')
     }
 
     environment {
         IMAGE_GEN_ZIP_FILE = "image_gen_1.0.${BUILD_NUMBER}.zip"
-        INSTA_POST_ZIP_FILE = "insta_post_1.0.${BUILD_NUMBER}.zip"
+        twitter_POST_ZIP_FILE = "twitter_post_1.0.${BUILD_NUMBER}.zip"
         TF_CLI_CONFIG_FILE = "${WORKSPACE}/.terraformrc"
     }
 
@@ -54,18 +54,18 @@ pipeline{
             }
         }
 
-        stage('Zip Insta Post Lambda Package'){
+        stage('Zip twitter Post Lambda Package'){
             when{
-                expression { params.ZIP_INSTA == true }
+                expression { params.ZIP_twitter == true }
             }
             steps{
                 echo 'packaging zip file'
                 sh 'pwd'
                 sh "ls -la"
                 
-                sh "zip -r ./${env.INSTA_POST_ZIP_FILE} insta_post.py"
+                sh "zip -r ./${env.twitter_POST_ZIP_FILE} twitter_post.py"
                 sh "ls -la"
-                echo '********** insta post lambda zip file created'
+                echo '********** twitter post lambda zip file created'
             }
         }
 
@@ -80,13 +80,13 @@ pipeline{
             }
         }
 
-        stage('Upload Insta Post Zip to S3'){
+        stage('Upload twitter Post Zip to S3'){
             when{
-                expression { params.INSTA_S3_UPLOAD == true && params.ZIP_INSTA == true }
+                expression { params.twitter_S3_UPLOAD == true && params.ZIP_twitter == true }
             }
             steps{
                 script{
-                    upload_to_s3(env.INSTA_POST_ZIP_FILE)
+                    upload_to_s3(env.twitter_POST_ZIP_FILE)
                 }
             }
         }
@@ -128,7 +128,7 @@ pipeline{
         stage('Update Terraform Variables'){
             when{
                 expression {
-                    params.UPDATE_TF_VAR == true && params.TERRAFORM_APPLY == true && (params.IMAGE_S3_UPLOAD == true || params.INSTA_S3_UPLOAD == true)
+                    params.UPDATE_TF_VAR == true && params.TERRAFORM_APPLY == true && (params.IMAGE_S3_UPLOAD == true || params.twitter_S3_UPLOAD == true)
                 }
             }
             steps{
@@ -143,12 +143,12 @@ pipeline{
                             }
                         }
 
-                        if (params.INSTA_S3_UPLOAD == true) {
+                        if (params.twitter_S3_UPLOAD == true) {
                             sh 'pwd'
-                            echo 'Updating Terraform Variable for Insta Post Lambda'
+                            echo 'Updating Terraform Variable for twitter Post Lambda'
 
-                            withCredentials([string(credentialsId: 'terraform_backend_token', variable: 'TOKEN'), string(credentialsId: 'insta_lambda_file_var_id', variable: 'INSTA_VAR_ID'), string(credentialsId: 'insta_zip_var_key', variable: 'INSTA_VAR_KEY'), string(credentialsId: 'terraform_workspace_id', variable: 'WORKSPACE_ID')]) {
-                                update_terraform_variable(INSTA_VAR_ID, INSTA_VAR_KEY, env.INSTA_POST_ZIP_FILE, WORKSPACE_ID, TOKEN)
+                            withCredentials([string(credentialsId: 'terraform_backend_token', variable: 'TOKEN'), string(credentialsId: 'twitter_lambda_file_var_id', variable: 'twitter_VAR_ID'), string(credentialsId: 'twitter_zip_var_key', variable: 'twitter_VAR_KEY'), string(credentialsId: 'terraform_workspace_id', variable: 'WORKSPACE_ID')]) {
+                                update_terraform_variable(twitter_VAR_ID, twitter_VAR_KEY, env.twitter_POST_ZIP_FILE, WORKSPACE_ID, TOKEN)
                             }
                         }
                     }
