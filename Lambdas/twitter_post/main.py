@@ -3,13 +3,13 @@ import os
 import re
 import tweepy
 
-bearer_token = r"%s" % os.environ['bearer_token']
-api_key = os.environ['api_key']
-api_secret = os.environ['api_secret']
-access_token = os.environ['access_token']
-access_token_secret = os.environ['access_token_secret']
-dynamodb_table_name = os.environ['dynamodb_table_name']
-jpg_bucket_name = os.environ['jpg_bucket_name']
+access_token = os.environ['ACCESS_TOKEN']
+access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
+api_key = os.environ['API_KEY']
+api_secret = os.environ['API_SECRET']
+bearer_token = r"%s" % os.environ['BEARER_TOKEN']
+dynamodb_table_name = os.environ['DYNAMODB_TABLE_NAME']
+image_bucket_name = os.environ['IMAGE_BUCKET_NAME']
 
 twitter = tweepy.Client(bearer_token, api_key, api_secret, access_token, access_token_secret)
 
@@ -33,7 +33,7 @@ def insert_space_before_capital(s):
     return result
 
 
-def put_item_in_table(table_nm, item):
+def upload_to_dynamodb(table_nm, item):
     response = dynamodb.put_item(TableName=table_nm, Item=item)
 
     return response
@@ -51,15 +51,15 @@ def handler(event, context):
         print(text)
         print(local_file_path)
 
-        # build dynamodb item for put_item_in_table function
+        # build dynamodb item for upload_to_dynamodb function
         date_attribute = event["Records"][0]["eventTime"]
         fileName_attribute = key
         item = {'date': {'S': date_attribute},'fileName': {'S': fileName_attribute}}
         
         # download image from S3
         try:
-            s3_client.download_file(jpg_bucket_name, key, local_file_path)
-            print(f'File downlaoded to {local_file_path}')
+            s3_client.download_file(image_bucket_name, key, local_file_path)
+            print(f'File downloaded to {local_file_path}')
         except Exception as e:
             print(e)
             return {
@@ -80,7 +80,7 @@ def handler(event, context):
         
         # add item to DynamoDB
         try:
-            put_item_in_table(dynamodb_table_name, item)
+            upload_to_dynamodb(dynamodb_table_name, item)
 
             return {
                 "statusCode": 200,

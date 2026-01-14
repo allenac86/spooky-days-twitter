@@ -1,0 +1,4 @@
+boto3
+aws-lambda-powertools
+openai
+requests

@@ -6,6 +6,9 @@ import os
 import boto3
 import openai
 
+bucket_name = os.environ['IMAGE_BUCKET_NAME']
+dynamodb_table_name = os.environ['DYNAMODB_TABLE_NAME']
+
 client = openai.OpenAI()
 s3_client = boto3.client('s3')
 
@@ -58,7 +61,6 @@ def upload_image_to_s3(filename, bucket):
 
 def handler(event, context):
     filename = ""
-    bucket_name = os.environ['JPG_BUCKET_NAME']
 
     try:
         generate_images(national_days_json, month_of_year, day_of_month, "b64_json", "hd")
