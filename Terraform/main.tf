@@ -60,6 +60,7 @@ resource "aws_iam_policy" "spooky_days_image_bucket_policy" {
       {
         Effect = "Allow"
         Action = [
+          "s3:GetObject",
           "s3:PutObject",
           "s3:PutObjectAcl"
         ]
