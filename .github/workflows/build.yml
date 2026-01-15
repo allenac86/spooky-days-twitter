@@ -80,8 +80,8 @@ jobs:
       - name: Update Lambda Layer Filename TFE Variable Values
         if: ${{ vars.UPLOAD_LAYERS == 'true' }}
         run: |
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_LAYER_KEY }}","value":"image_gen_layer.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_LAYER_KEY }}","value":"twitter_post_layer.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
 
 #   deploy:
 #     runs-on: ubuntu-latest
