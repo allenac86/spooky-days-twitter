@@ -87,6 +87,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     needs: build
+    permissions:
+      actions: write
+      contents: read
 
     steps:
       - name: Checkout Code
