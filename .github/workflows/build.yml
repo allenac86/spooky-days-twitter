@@ -18,9 +18,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: List Contents
-        run: ls -la
-      - name: Package Zip Files
+
+      - name: Package Lambda Functions
         run: |
           cd Lambdas/image_gen
           zip -r ../../image_gen.zip main.py
@@ -33,6 +32,7 @@ jobs:
           unzip -l image_gen.zip
           echo "Contents of twitter_post.zip:"
           unzip -l twitter_post.zip
+
       - name: Package Lambda Layers
         run: |
           mkdir -p layer_image_gen/python
