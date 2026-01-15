@@ -89,7 +89,10 @@ jobs:
     needs: build
 
     steps:
-      - name: Trigger Deploy Workflow
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Trigger Deployment Workflow
         run: gh workflow run deploy.yml
         env:
           GH_TOKEN: ${{ github.token }}
