@@ -37,12 +37,12 @@ jobs:
       - name: Package Lambda Layers
         run: |
           mkdir -p layer_image_gen/python
-          pip install -r Lambdas/image_gen/requirements.txt -t layer_image_gen/python
+          pip install -r Lambdas/image_gen/requirements.txt -t layer_image_gen/python --platform manylinux2014_x86_64 --only-binary=:all: --upgrade
           cd layer_image_gen
           zip -r ../image_gen_layer.zip python
           cd ..
           mkdir -p layer_twitter_post/python
-          pip install -r Lambdas/twitter_post/requirements.txt -t layer_twitter_post/python
+          pip install -r Lambdas/twitter_post/requirements.txt -t layer_twitter_post/python --platform manylinux2014_x86_64 --only-binary=:all: --upgrade
           cd layer_twitter_post
           zip -r ../twitter_post_layer.zip python
           cd ..
