@@ -40,7 +40,8 @@ Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-di
 <img width="4297" height="1745" alt="image" src="https://github.com/user-attachments/assets/b0748c4f-33da-49f5-8749-a92640fd22e1" />
 
 
-## Twitter Profile ([https://x.com/spooky_days_gpt]):
+## Twitter Profile
+([https://x.com/spooky_days_gpt]):
 
 <img width="655" height="548" alt="image" src="https://github.com/user-attachments/assets/03a83fb0-a93e-4cb7-9ddd-ce7debb347c1" />
 
