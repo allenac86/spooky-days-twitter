@@ -116,7 +116,7 @@ def handler(event, context):
         key = event["Records"][0]["s3"]["object"]["key"]
         job_id = key.replace("images/", "")
         text = insert_space_before_capital(key.split("_")[-1].replace(".jpg", ""))
-        caption = f"{text}"
+        caption = f"National {text} Day!"
         local_file_path = f"/tmp/{job_id}"
         print(f"Caption: {caption}")
         print(f"Local file path: {local_file_path}")
