@@ -7,3 +7,77 @@ resource "aws_s3_bucket" "spooky_days_lambda_bucket" {
 resource "aws_s3_bucket" "spooky_days_image_bucket" {
   bucket = "${var.app_name}-image-bucket-${random_string.random.result}"
 }
+
+# Enable versioning on lambda bucket
+resource "aws_s3_bucket_versioning" "lambda_bucket_versioning" {
+  bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Enable versioning on image bucket
+resource "aws_s3_bucket_versioning" "image_bucket_versioning" {
+  bucket = aws_s3_bucket.spooky_days_image_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Lifecycle policy for lambda bucket
+resource "aws_s3_bucket_lifecycle_configuration" "lambda_bucket_lifecycle" {
+  bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = var.s3_lambda_lifecycle_noncurrent_versions_enabled ? "Enabled" : "Disabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.s3_lambda_noncurrent_version_expiration_days
+    }
+  }
+
+  rule {
+    id     = "abort-incomplete-multipart-uploads"
+    status = var.s3_lambda_lifecycle_multipart_upload_cleanup_enabled ? "Enabled" : "Disabled"
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = var.s3_lambda_incomplete_multipart_upload_days
+    }
+  }
+}
+
+# Lifecycle policy for image bucket
+resource "aws_s3_bucket_lifecycle_configuration" "image_bucket_lifecycle" {
+  bucket = aws_s3_bucket.spooky_days_image_bucket.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = var.s3_image_lifecycle_noncurrent_versions_enabled ? "Enabled" : "Disabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.s3_image_noncurrent_version_expiration_days
+    }
+  }
+
+  rule {
+    id     = "abort-incomplete-multipart-uploads"
+    status = var.s3_image_lifecycle_multipart_upload_cleanup_enabled ? "Enabled" : "Disabled"
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = var.s3_image_incomplete_multipart_upload_days
+    }
+  }
+
+  rule {
+    id     = "transition-to-glacier"
+    status = var.s3_image_lifecycle_glacier_transition_enabled ? "Enabled" : "Disabled"
+
+    transition {
+      days          = var.s3_image_glacier_transition_days
+      storage_class = var.s3_image_transition_storage_class
+    }
+  }
+}

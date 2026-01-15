@@ -93,3 +93,71 @@ variable "dynamodb_table_name" {
   type        = string
   default     = null
 }
+
+# Lambda bucket lifecycle variables
+variable "s3_lambda_noncurrent_version_expiration_days" {
+  description = "Number of days after which noncurrent object versions are deleted in lambda bucket"
+  type        = number
+  default     = 14
+}
+
+variable "s3_lambda_incomplete_multipart_upload_days" {
+  description = "Number of days after which incomplete multipart uploads are aborted in lambda bucket"
+  type        = number
+  default     = 7
+}
+
+variable "s3_lambda_lifecycle_noncurrent_versions_enabled" {
+  description = "Enable lifecycle rule for deleting noncurrent versions in lambda bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_lambda_lifecycle_multipart_upload_cleanup_enabled" {
+  description = "Enable lifecycle rule for aborting incomplete multipart uploads in lambda bucket"
+  type        = bool
+  default     = true
+}
+
+# Image bucket lifecycle variables
+variable "s3_image_noncurrent_version_expiration_days" {
+  description = "Number of days after which noncurrent object versions are deleted in image bucket"
+  type        = number
+  default     = 14
+}
+
+variable "s3_image_incomplete_multipart_upload_days" {
+  description = "Number of days after which incomplete multipart uploads are aborted in image bucket"
+  type        = number
+  default     = 7
+}
+
+variable "s3_image_glacier_transition_days" {
+  description = "Number of days after which objects are transitioned to Glacier Instant Retrieval in image bucket"
+  type        = number
+  default     = 30
+}
+
+variable "s3_image_lifecycle_noncurrent_versions_enabled" {
+  description = "Enable lifecycle rule for deleting noncurrent versions in image bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_image_lifecycle_multipart_upload_cleanup_enabled" {
+  description = "Enable lifecycle rule for aborting incomplete multipart uploads in image bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_image_lifecycle_glacier_transition_enabled" {
+  description = "Enable lifecycle rule for transitioning objects to Glacier in image bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_image_transition_storage_class" {
+  description = "Storage class to transition objects to in image bucket"
+  type        = string
+  default     = "GLACIER_IR"
+}
