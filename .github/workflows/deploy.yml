@@ -1,4 +1,4 @@
-name: spooky-days cd
+name: spooky-days-twitter cd
 
 on:
   workflow_dispatch:

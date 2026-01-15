@@ -1,0 +1,28 @@
+[project]
+name = "spooky-days-twitter"
+version = "1.0.0"
+description = "Automated daily image generation and Twitter posting for national days using OpenAI DALL-E 3 and AWS Lambda"
+authors = [{name = "Adam Allen", username = "allenac86"}]
+requires-python = ">=3.10"
+readme = "README.md"
+
+[project.urls]
+Repository = "https://github.com/allenac86/spooky-days-twitter"
+
+[tool.lambda.image_gen]
+requirements = "Lambdas/image_gen/requirements.txt"
+dependencies = [
+    "boto3",
+    "aws-lambda-powertools",
+    "openai",
+    "requests"
+]
+
+[tool.lambda.twitter_post]
+requirements = "Lambdas/twitter_post/requirements.txt"
+dependencies = [
+    "boto3",
+    "aws-lambda-powertools",
+    "tweepy",
+    "requests"
+]

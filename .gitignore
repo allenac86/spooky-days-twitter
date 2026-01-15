@@ -163,4 +163,3 @@ cython_debug/
 .terraform.lock.hcl
 **/national-days.json
 **/tfe-data.json
-**/backend.tf

@@ -1,4 +1,4 @@
-name: spooky-days-gpt ci
+name: spooky-days-twitter ci
 
 on:
   push:
