@@ -83,12 +83,13 @@ jobs:
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
 
-#   deploy:
-#     runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: build
 
-#     needs: build
-
-#     steps:
-#       - name: Trigger spooky-days-iac Terraform Workflow
-#         run: |
-#           curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/allenac86/spooky-days-twitter-iac/actions/workflows/deploy.yml/dispatches -d '{"ref":"main"}'
+    steps:
+      - name: Trigger Deploy Workflow
+        run: gh workflow run deploy.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
