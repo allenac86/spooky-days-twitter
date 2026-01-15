@@ -5,6 +5,9 @@ import os
 
 import boto3
 import openai
+from aws_lambda_powertools import Logger
+
+logger = Logger(service="image_generation_lambda")
 
 bucket_name = os.environ['IMAGE_BUCKET_NAME']
 dynamodb_table_name = os.environ['DYNAMODB_TABLE_NAME']
@@ -16,16 +19,16 @@ try:
     secret_response = secrets_client.get_secret_value(SecretId=openai_secret_arn)
     openai_api_key = secret_response['SecretString']
 except secrets_client.exceptions.ResourceNotFoundException:
-    print("Error: Secret not found in Secrets Manager")
+    logger.error("Secret not found in Secrets Manager")
     raise
 except secrets_client.exceptions.InvalidRequestException as e:
-    print(f"Error: Invalid request to Secrets Manager: {e}")
+    logger.error("Invalid request to Secrets Manager", error=str(e))
     raise
 except secrets_client.exceptions.InvalidParameterException as e:
-    print(f"Error: Invalid parameter in Secrets Manager request: {e}")
+    logger.error("Invalid parameter in Secrets Manager request", error=str(e))
     raise
 except Exception as e:
-    print(f"Error retrieving secret from Secrets Manager: {e}")
+    logger.error("Failed to retrieve secret from Secrets Manager", error=str(e))
     raise
 
 client = openai.OpenAI(api_key=openai_api_key)
@@ -51,13 +54,13 @@ try:
     response = s3_client.get_object(Bucket=bucket_name, Key='national-days.json')
     national_days_json = json.loads(response['Body'].read())
 except s3_client.exceptions.NoSuchKey as e:
-    print(f"Error: national-days.json not found in S3 bucket: {e}")
+    logger.error("national-days.json not found in S3", bucket=bucket_name, error=str(e))
     raise
 except json.JSONDecodeError as e:
-    print(f"Error: Invalid JSON in national-days.json: {e}")
+    logger.error("Invalid JSON in national-days.json", error=str(e))
     raise
 except Exception as e:
-    print(f"Error reading national-days.json from S3: {e}")
+    logger.error("Failed to read national-days.json from S3", bucket=bucket_name, error=str(e))
     raise
 
 current_time = datetime.datetime.now()
@@ -69,6 +72,7 @@ b64_image_list = []
 def generate_images(data, month, day, response_type, image_quality):
     for national_day in data[month][day]:
         try:
+            logger.info("Generating image", national_day=national_day, model="dall-e-3", quality=image_quality)
             response = client.images.generate(
                 model="dall-e-3",
                 prompt=national_days_json["Prompt"] + national_day + " Day.",
@@ -84,8 +88,9 @@ def generate_images(data, month, day, response_type, image_quality):
                 "day": national_day,
                 "image": response.data[0].b64_json
             })
+            logger.info("Image generated successfully", national_day=national_day)
         except Exception as e:
-            print(f"Error generating image for {national_day}: {e}")
+            logger.error("Image generation failed", national_day=national_day, error=str(e))
             raise
 
               
@@ -94,8 +99,9 @@ def upload_image_to_s3(filename, bucket):
         file_to_upload = filename.replace("/tmp/", "")
         s3_key = f"images/{file_to_upload}"
         s3_client.upload_file(filename, bucket, s3_key)
+        logger.info("Image uploaded to S3", s3_key=s3_key)
     except Exception as e:
-        print(f"Error uploading {filename} to S3: {e}")
+        logger.error("S3 upload failed", filename=filename, error=str(e))
         raise
 
 
@@ -110,17 +116,19 @@ def insert_dynamodb_record(job_id, status="pending"):
                 'status': {'S': status}
             }
         )
+        logger.info("DynamoDB record inserted", job_id=job_id, status=status)
     except Exception as e:
-        print(f"Error inserting DynamoDB record for {job_id}: {e}")
+        logger.error("DynamoDB insert failed", job_id=job_id, error=str(e))
         raise
 
 
+@logger.inject_lambda_context
 def handler(event, context):
     filename = ""
 
     try:
+        logger.info("Starting image generation workflow", date=f"{month_of_year}_{day_of_month}")
         generate_images(national_days_json, month_of_year, day_of_month, "b64_json", "hd")
-        print("images generated, saving to temp filesystem")
 
         for indx, image_dict in enumerate(b64_image_list):
             filename = f'/tmp/{file_prefix}_{indx}_{image_dict["day"].replace(" ", "")}.jpg'
@@ -129,25 +137,17 @@ def handler(event, context):
             
             with open(filename, 'wb') as f:
                 f.write(b64decode(image_dict["image"]))
-            
-            print(f'{filename} saved to temp filesystem')
-            print(f"Uploading image {filename} to S3")
 
             upload_image_to_s3(filename, bucket_name)
-
-            print(f"Image {filename} uploaded to S3")
-            print(f"Inserting DynamoDB record for {filename}")
-
             insert_dynamodb_record(filename.replace("/tmp/", ""), "uploaded")
 
-            print(f"DynamoDB record inserted for {filename}")
-
+        logger.info("Image generation workflow completed", images_generated=len(b64_image_list))
         return {
             "statusCode": 200,
             "body": json.dumps("Images generated and uploaded to S3")
         }
     except Exception as e:
-        print(e)
+        logger.error("Image generation workflow failed", error=str(e))
         return {
             "statusCode": 500,
             "body": json.dumps("Error generating images")
