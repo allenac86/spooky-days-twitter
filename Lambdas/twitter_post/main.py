@@ -57,11 +57,11 @@ def insert_space_before_capital(s):
     result = re.sub(r'(?<!^)(?=[A-Z])', ' ', s)
     return result
 
+# TODO: implement correct dynamodb functionality
+# def upload_to_dynamodb(table_nm, item):
+#     response = dynamodb.put_item(TableName=table_nm, Item=item)
 
-def upload_to_dynamodb(table_nm, item):
-    response = dynamodb.put_item(TableName=table_nm, Item=item)
-
-    return response
+#     return response
 
 
 def handler(event, context):
@@ -104,19 +104,20 @@ def handler(event, context):
             }
         
         # add item to DynamoDB
-        try:
-            upload_to_dynamodb(dynamodb_table_name, item)
+        # TODO implement correct dynamodb functionality
+        # try:
+        #     upload_to_dynamodb(dynamodb_table_name, item)
 
-            return {
-                "statusCode": 200,
-                "body": "Item added to DynamoDB successfully!"
-            }
-        except Exception as e:
-            print(e)
-            return {
-                "statusCode": 500,
-                "body": "Error adding item to DynamoDB"
-            }
+        #     return {
+        #         "statusCode": 200,
+        #         "body": "Item added to DynamoDB successfully!"
+        #     }
+        # except Exception as e:
+        #     print(e)
+        #     return {
+        #         "statusCode": 500,
+        #         "body": "Error adding item to DynamoDB"
+        #     }
         
     else:
         return {
