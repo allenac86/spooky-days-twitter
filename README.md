@@ -39,8 +39,46 @@ Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-di
 <img width="4297" height="1745" alt="image" src="https://github.com/user-attachments/assets/b0748c4f-33da-49f5-8749-a92640fd22e1" />
 
 Twitter Profile ([https://x.com/spooky_days_gpt]):
+
 <img width="655" height="548" alt="image" src="https://github.com/user-attachments/assets/03a83fb0-a93e-4cb7-9ddd-ce7debb347c1" />
 
 Example Twitter Post:
+
 <img width="650" height="583" alt="image" src="https://github.com/user-attachments/assets/e9f94c35-df8e-404a-a65b-ad8fdf54c874" />
+
+## Roadmap
+
+### Phase 1: Observability
+- Integrate AWS Lambda Powertools (structured logging, correlation IDs, custom metrics)
+- Enable X-Ray tracing on both Lambdas
+- Create CloudWatch dashboards with key metrics
+- Configure CloudWatch alarms with SNS notifications
+
+### Phase 2: Security
+- Add security scanning to CI pipeline (Gitleaks, Bandit, pip-audit, Checkov, Trivy)
+- Implement Secrets Manager rotation
+
+### Phase 3: Testing & Quality
+- Add unit tests with pytest (80% coverage requirement)
+- Add pre-commit hooks (Ruff, Mypy, Gitleaks)
+- Mock external API calls (AWS, OpenAI, Twitter) in tests
+
+### Phase 4: CI/CD Improvements
+- Add quality gate workflow (linting, type checking, security scans)
+- Implement automated testing in pipeline
+- Add manual approval gates for deployments
+
+### Phase 5: Infrastructure Enhancements
+- Configure Dead Letter Queues for both Lambdas
+- Add idempotency decorator for twitter_post Lambda
+- Enhance retry logic with exponential backoff
+
+### Phase 6: Documentation
+- Document threat model
+- Add cost estimate breakdown
+
+### Phase 7: Multi-Environment (Stretch Goal)
+- Create separate dev and prod Terraform Cloud workspaces
+- Implement environment-specific configurations
+- Add promotion pipeline with approval gates
 
