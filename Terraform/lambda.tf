@@ -1,10 +1,11 @@
 # Image Gen Lambda Function
 resource "aws_lambda_function" "spooky_days_image_lambda_function" {
-  function_name = local.image_lambda_function_name
-  role          = aws_iam_role.image_lambda_execution_role.arn
-  handler       = "main.handler"
-  s3_bucket     = aws_s3_bucket.spooky_days_lambda_bucket.bucket
-  s3_key        = data.aws_s3_object.spooky_days_object.key
+  function_name    = local.image_lambda_function_name
+  role             = aws_iam_role.image_lambda_execution_role.arn
+  handler          = "main.handler"
+  s3_bucket        = aws_s3_bucket.spooky_days_lambda_bucket.bucket
+  s3_key           = data.aws_s3_object.spooky_days_object.key
+  source_code_hash = data.aws_s3_object.spooky_days_object.etag
 
   runtime = "python3.10"
 
@@ -25,11 +26,12 @@ resource "aws_lambda_function" "spooky_days_image_lambda_function" {
 
 # Twitter Post Lambda Function
 resource "aws_lambda_function" "spooky_days_twitter_lambda_function" {
-  function_name = local.twitter_lambda_function_name
-  role          = aws_iam_role.twitter_lambda_execution_role.arn
-  handler       = "main.handler"
-  s3_bucket     = aws_s3_bucket.spooky_days_lambda_bucket.bucket
-  s3_key        = data.aws_s3_object.spooky_days_object_twitter.key
+  function_name    = local.twitter_lambda_function_name
+  role             = aws_iam_role.twitter_lambda_execution_role.arn
+  handler          = "main.handler"
+  s3_bucket        = aws_s3_bucket.spooky_days_lambda_bucket.bucket
+  s3_key           = data.aws_s3_object.spooky_days_object_twitter.key
+  source_code_hash = data.aws_s3_object.spooky_days_object_twitter.etag
 
   runtime = "python3.10"
 
