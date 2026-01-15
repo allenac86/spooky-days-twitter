@@ -36,13 +36,13 @@ jobs:
 
       - name: Package Lambda Layers
         run: |
-          mkdir -p layer_image_gen/python
-          pip install -r Lambdas/image_gen/requirements.txt -t layer_image_gen/python --platform manylinux2014_x86_64 --only-binary=:all: --upgrade
+          docker run --rm -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
+            /bin/bash -c "pip install -r /workspace/Lambdas/image_gen/requirements.txt -t /workspace/layer_image_gen/python && chown -R $(id -u):$(id -g) /workspace/layer_image_gen"
           cd layer_image_gen
           zip -r ../image_gen_layer.zip python
           cd ..
-          mkdir -p layer_twitter_post/python
-          pip install -r Lambdas/twitter_post/requirements.txt -t layer_twitter_post/python --platform manylinux2014_x86_64 --only-binary=:all: --upgrade
+          docker run --rm -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
+            /bin/bash -c "pip install -r /workspace/Lambdas/twitter_post/requirements.txt -t /workspace/layer_twitter_post/python && chown -R $(id -u):$(id -g) /workspace/layer_twitter_post"
           cd layer_twitter_post
           zip -r ../twitter_post_layer.zip python
           cd ..
