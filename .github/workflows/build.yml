@@ -1,25 +1,25 @@
-# name: spooky-days ci
+name: spooky-days-gpt ci
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-#     env:
-#       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#       AWS_DEFAULT_REGION: us-east-1
-#       AWS_DEFAULT_OUTPUT: json
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_OUTPUT: json
 
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v4
-#       - name: List Contents
-#         run: ls -la
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: List Contents
+        run: ls -la
 #       - name: Package Zip Files
 #         run: |
 #           zip -r image_gen_2.${{ github.run_id }}.${{ github.run_attempt }}.zip image_gen.py national-days.json
