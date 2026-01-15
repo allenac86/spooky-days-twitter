@@ -92,7 +92,6 @@ def generate_images(data, month, day, response_type, image_quality):
 def upload_image_to_s3(filename, bucket):
     try:
         file_to_upload = filename.replace("/tmp/", "")
-        file_to_upload = filename
         s3_key = f"images/{file_to_upload}"
         s3_client.upload_file(filename, bucket, s3_key)
     except Exception as e:
