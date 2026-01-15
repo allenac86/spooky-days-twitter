@@ -36,8 +36,11 @@ I created this AWS serverless application while preparing for the AWS Developer 
 
 Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-diagram-generator]):
 
-<img width="2831" height="1946" alt="image" src="https://github.com/user-attachments/assets/d25ebaea-ab12-4ddc-8687-8b3bf7dbe640" />
+<img width="4297" height="1745" alt="image" src="https://github.com/user-attachments/assets/b0748c4f-33da-49f5-8749-a92640fd22e1" />
 
-Twitter Post Output:
+Twitter Profile ([https://x.com/spooky_days_gpt]):
+<img width="655" height="548" alt="image" src="https://github.com/user-attachments/assets/03a83fb0-a93e-4cb7-9ddd-ce7debb347c1" />
 
-<img width="572" height="1165" alt="image" src="https://github.com/user-attachments/assets/016d0cd3-f28e-47ba-b37b-ebb10608095f" />
+Example Twitter Post:
+<img width="650" height="583" alt="image" src="https://github.com/user-attachments/assets/e9f94c35-df8e-404a-a65b-ad8fdf54c874" />
+
