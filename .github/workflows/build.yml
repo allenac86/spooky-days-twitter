@@ -20,11 +20,19 @@ jobs:
         uses: actions/checkout@v4
       - name: List Contents
         run: ls -la
-#       - name: Package Zip Files
-#         run: |
-#           zip -r image_gen_2.${{ github.run_id }}.${{ github.run_attempt }}.zip image_gen.py national-days.json
-#           zip -r twitter_post_2.${{ github.run_id }}.${{ github.run_attempt }}.zip twitter_post.py
-#           ls -la
+      - name: Package Zip Files
+        run: |
+          cd Lambdas/image_gen
+          zip -r ../../image_gen.zip main.py
+          cd ../..
+          cd Lambdas/twitter_post
+          zip -r ../../twitter_post.zip main.py
+          cd ../..
+          ls -la
+          echo "Contents of image_gen.zip:"
+          unzip -l image_gen.zip
+          echo "Contents of twitter_post.zip:"
+          unzip -l twitter_post.zip
 #       - name: Upload Zip Files to S3
 #         run: |
 #           aws s3 cp image_gen_2.${{ github.run_id }}.${{ github.run_attempt }}.zip ${{ secrets.S3_BUCKET }}
