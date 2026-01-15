@@ -57,6 +57,21 @@ jobs:
           aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
           aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
 
+      - name: Upload Lambda Layers
+        if: ${{ vars.UPLOAD_LAYERS == 'true' }}
+        run: |
+          aws lambda publish-layer-version \
+            --layer-name image_gen_layer \
+            --zip-file fileb://image_gen_layer.zip \
+            --compatible-runtimes python3.10 \
+            --description "Dependencies for image generation lambda"
+          
+          aws lambda publish-layer-version \
+            --layer-name twitter_post_layer \
+            --zip-file fileb://twitter_post_layer.zip \
+            --compatible-runtimes python3.10 \
+            --description "Dependencies for twitter post lambda"
+
       # - name: Update Image Gen TFE Variable
       #   run: |
       #     curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
