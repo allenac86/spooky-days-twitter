@@ -27,7 +27,7 @@ MONTH_DICT = {
     "12": "december"
 }
 
-file = open('national-days.json')
+file = open('../../national-days.json')
 national_days_json = json.load(file)
 current_time = datetime.datetime.now()
 day_of_month = str(current_time.day)
@@ -39,7 +39,7 @@ def generate_images(data, month, day, response_type, image_quality):
     for national_day in data[month][day]:
         response = client.images.generate(
             model="dall-e-3",
-            prompt="National " + national_day + " Day, but with a nightmarish, horrifyingly evil twist. The image should be dark, evil, terrifying, and induce a sense of dread in the viewer. Do not adjust this prompt in any way.",
+            prompt=national_days_json["Prompt"] + national_day + " Day.",
             n=1,
             size="1024x1024",
             style="vivid",
