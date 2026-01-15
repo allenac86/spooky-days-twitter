@@ -131,13 +131,15 @@ def handler(event, context):
                 f.write(b64decode(image_dict["image"]))
             
             print(f'{filename} saved to temp filesystem')
-
             print(f"Uploading image {filename} to S3")
-            upload_image_to_s3(filename, bucket_name)
-            print(f"Image {filename} uploaded to S3")
 
+            upload_image_to_s3(filename, bucket_name)
+
+            print(f"Image {filename} uploaded to S3")
             print(f"Inserting DynamoDB record for {filename}")
-            insert_dynamodb_record(filename, "uploaded")
+
+            insert_dynamodb_record(filename.replace("/tmp/", ""), "uploaded")
+
             print(f"DynamoDB record inserted for {filename}")
 
         return {
