@@ -1,23 +1,48 @@
 import boto3
+import json
 import os
 import re
 import tweepy
 
-access_token = os.environ['ACCESS_TOKEN']
-access_token_secret = os.environ['ACCESS_TOKEN_SECRET']
-api_key = os.environ['API_KEY']
-api_secret = os.environ['API_SECRET']
-bearer_token = r"%s" % os.environ['BEARER_TOKEN']
+twitter_secret_arn = os.environ['TWITTER_SECRET_ARN']
 dynamodb_table_name = os.environ['DYNAMODB_TABLE_NAME']
 image_bucket_name = os.environ['IMAGE_BUCKET_NAME']
 
-twitter = tweepy.Client(bearer_token, api_key, api_secret, access_token, access_token_secret)
+# Retrieve Twitter credentials from Secrets Manager
+secrets_client = boto3.client('secretsmanager')
+try:
+    secret_response = secrets_client.get_secret_value(SecretId=twitter_secret_arn)
+    twitter_credentials = json.loads(secret_response['SecretString'])
+    access_token = twitter_credentials['ACCESS_TOKEN']
+    access_token_secret = twitter_credentials['ACCESS_TOKEN_SECRET']
+    api_key = twitter_credentials['API_KEY']
+    api_secret = twitter_credentials['API_SECRET']
+    bearer_token = twitter_credentials['BEARER_TOKEN']
+except secrets_client.exceptions.ResourceNotFoundException:
+    print("Error: Secret not found in Secrets Manager")
+    raise
+except secrets_client.exceptions.InvalidRequestException as e:
+    print(f"Error: Invalid request to Secrets Manager: {e}")
+    raise
+except secrets_client.exceptions.InvalidParameterException as e:
+    print(f"Error: Invalid parameter in Secrets Manager request: {e}")
+    raise
+except json.JSONDecodeError as e:
+    print(f"Error: Invalid JSON in secret: {e}")
+    raise
+except KeyError as e:
+    print(f"Error: Missing required credential in secret: {e}")
+    raise
+except Exception as e:
+    print(f"Error retrieving secret from Secrets Manager: {e}")
+    raise
 
+twitter = tweepy.Client(bearer_token, api_key, api_secret, access_token, access_token_secret)
 auth = tweepy.OAuth1UserHandler(api_key, api_secret, access_token, access_token_secret)
 api = tweepy.API(auth)
 
-s3_client = boto3.client('s3')
 dynamodb = boto3.client('dynamodb')
+s3_client = boto3.client('s3')
 
 
 def post_image_to_twitter(text_content, file_path):
