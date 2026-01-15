@@ -8,8 +8,27 @@ import openai
 
 bucket_name = os.environ['IMAGE_BUCKET_NAME']
 dynamodb_table_name = os.environ['DYNAMODB_TABLE_NAME']
+openai_secret_arn = os.environ['OPENAI_SECRET_ARN']
 
-client = openai.OpenAI()
+# Retrieve OpenAI API key from Secrets Manager
+secrets_client = boto3.client('secretsmanager')
+try:
+    secret_response = secrets_client.get_secret_value(SecretId=openai_secret_arn)
+    openai_api_key = secret_response['SecretString']
+except secrets_client.exceptions.ResourceNotFoundException:
+    print("Error: Secret not found in Secrets Manager")
+    raise
+except secrets_client.exceptions.InvalidRequestException as e:
+    print(f"Error: Invalid request to Secrets Manager: {e}")
+    raise
+except secrets_client.exceptions.InvalidParameterException as e:
+    print(f"Error: Invalid parameter in Secrets Manager request: {e}")
+    raise
+except Exception as e:
+    print(f"Error retrieving secret from Secrets Manager: {e}")
+    raise
+
+client = openai.OpenAI(api_key=openai_api_key)
 dynamodb_client = boto3.client('dynamodb')
 s3_client = boto3.client('s3')
 
