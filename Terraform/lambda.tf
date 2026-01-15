@@ -17,8 +17,8 @@ resource "aws_lambda_function" "spooky_days_image_lambda_function" {
   environment {
     variables = {
       DYNAMODB_TABLE_NAME = var.dynamodb_table_name
-      OPENAI_API_KEY      = var.openai_api_key
       IMAGE_BUCKET_NAME   = var.image_bucket_name
+      OPENAI_SECRET_ARN   = aws_secretsmanager_secret.image_gen_secrets.arn
     }
   }
 }
@@ -41,13 +41,9 @@ resource "aws_lambda_function" "spooky_days_twitter_lambda_function" {
 
   environment {
     variables = {
-      ACCESS_TOKEN        = var.twitter_access_token
-      ACCESS_TOKEN_SECRET = var.twitter_access_token_secret
-      API_KEY             = var.twitter_api_key
-      API_SECRET          = var.twitter_api_secret
-      BEARER_TOKEN        = var.twitter_bearer_token
       DYNAMODB_TABLE_NAME = var.dynamodb_table_name
       IMAGE_BUCKET_NAME   = var.image_bucket_name
+      TWITTER_SECRET_ARN  = aws_secretsmanager_secret.twitter_secrets.arn
     }
   }
 }
