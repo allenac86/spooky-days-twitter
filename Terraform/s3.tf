@@ -8,6 +8,52 @@ resource "aws_s3_bucket" "spooky_days_image_bucket" {
   bucket = "${var.app_name}-image-bucket-${random_string.random.result}"
 }
 
+# Encrypt lambda bucket with KMS
+resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_bucket_encryption" {
+  bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.app_encryption_key.id
+    }
+    bucket_key_enabled = true
+  }
+}
+
+# Encrypt image bucket with KMS
+resource "aws_s3_bucket_server_side_encryption_configuration" "image_bucket_encryption" {
+  bucket = aws_s3_bucket.spooky_days_image_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.app_encryption_key.id
+    }
+    bucket_key_enabled = true
+  }
+}
+
+# Block public access to lambda bucket
+resource "aws_s3_bucket_public_access_block" "lambda_bucket_public_access_block" {
+  bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Block public access to image bucket
+resource "aws_s3_bucket_public_access_block" "image_bucket_public_access_block" {
+  bucket = aws_s3_bucket.spooky_days_image_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Enable versioning on lambda bucket
 resource "aws_s3_bucket_versioning" "lambda_bucket_versioning" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
