@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-
 LAMBDA_IMAGE_GEN_PATH = str(Path(__file__).parent.parent / 'Lambdas' / 'image_gen')
 
 
@@ -22,7 +21,7 @@ def setup_python_path():
 def reset_imports():
     """
     Reset module imports between tests to avoid state pollution.
-    
+
     This ensures each test gets a fresh import of the Lambda modules,
     preventing issues with global variables like b64_image_list.
     """
@@ -47,20 +46,22 @@ def aws_credentials(monkeypatch):
 def mock_lambda_context():
     """
     Standard mock Lambda context object.
-    
+
     Provides a reusable context object with typical Lambda attributes.
     """
     from unittest.mock import Mock
-    
+
     context = Mock()
     context.function_name = 'test-function'
     context.function_version = '$LATEST'
-    context.invoked_function_arn = 'arn:aws:lambda:us-east-1:123456789012:function:test-function'
+    context.invoked_function_arn = (
+        'arn:aws:lambda:us-east-1:123456789012:function:test-function'
+    )
     context.memory_limit_in_mb = 512
     context.aws_request_id = 'test-request-id'
     context.log_group_name = '/aws/lambda/test-function'
     context.log_stream_name = '2026/01/16/[$LATEST]test'
-    
+
     context.get_remaining_time_in_millis.return_value = 300000
-    
+
     return context
