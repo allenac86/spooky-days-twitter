@@ -6,7 +6,6 @@ import pytest
 
 
 LAMBDA_IMAGE_GEN_PATH = str(Path(__file__).parent.parent / 'Lambdas' / 'image_gen')
-LAMBDA_TWITTER_POST_PATH = str(Path(__file__).parent.parent / 'Lambdas' / 'twitter_post')
 
 
 @pytest.fixture(scope='session', autouse=True)
