@@ -1,9 +1,9 @@
 # spooky-days-twitter
 
-[![Build](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml)
-[![Deploy](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml)
+[![CI](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml)
+[![CD](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml)
 [![Security Scan](https://github.com/allenac86/spooky-days-twitter/actions/workflows/security-scan.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/security-scan.yml)
-[![codecov](https://codecov.io/gh/allenac86/spooky-days-twitter/branch/main/graph/badge.svg)](https://codecov.io/gh/allenac86/spooky-days-twitter)
+[![Code Coverage](https://codecov.io/gh/allenac86/spooky-days-twitter/branch/main/graph/badge.svg)](https://codecov.io/gh/allenac86/spooky-days-twitter)
 
 A serverless Python application that generates images of various "National Days" with a spooky twist using OpenAI's DALL-E 3 and automatically posts them to Twitter (X) Monday through Friday at 8:00 AM EST.
 
