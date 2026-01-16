@@ -2,6 +2,7 @@
 
 [![Build](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml)
 [![Deploy](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml)
+[![codecov](https://codecov.io/gh/allenac86/spooky-days-twitter/branch/main/graph/badge.svg)](https://codecov.io/gh/allenac86/spooky-days-twitter)
 
 A serverless Python application that generates images of various "National Days" with a spooky twist using OpenAI's DALL-E 3 and automatically posts them to Twitter (X) Monday through Friday at 8:00 AM EST.
 
@@ -86,4 +87,3 @@ Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-di
 - Create separate dev and prod Terraform Cloud workspaces
 - Implement environment-specific configurations
 - Add promotion pipeline with approval gates
-
