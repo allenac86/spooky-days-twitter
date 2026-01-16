@@ -150,8 +150,11 @@ def handler(event, context):
             filename = (
                 f'/tmp/{file_prefix}_{indx}_{image_dict["day"].replace(" ", "")}.jpg'
             )
-            # the below line is for local testing, comment it out when deploying to Lambda
-            # filename = f'{file_prefix}_{indx}_{image_dict["day"].replace(" ", "")}.jpg'
+            # the below line is for local testing,
+            # comment it out when deploying to Lambda
+            # filename = (
+            #     f'{file_prefix}_{indx}_{image_dict["day"].replace(" ", "")}.jpg'
+            # )
 
             with open(filename, 'wb') as f:
                 f.write(b64decode(image_dict['image']))
