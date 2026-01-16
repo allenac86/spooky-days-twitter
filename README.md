@@ -53,6 +53,70 @@ Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-di
 <img width="650" height="583" alt="image" src="https://github.com/user-attachments/assets/e9f94c35-df8e-404a-a65b-ad8fdf54c874" />
 
 
+## CI/CD Pipeline
+
+The project includes a comprehensive CI/CD pipeline with quality gates, security scanning, and automated deployments. All jobs run sequentially, with each stage depending on the successful completion of all previous stages.
+
+### Pipeline Stages
+
+**1. Code Quality (Linting)**
+- **Ruff** - Python linter and formatter
+  - Enforces PEP 8 style guidelines
+  - 88 character line length
+  - Checks for code quality issues (pyflakes, bugbear, pyupgrade)
+  - Import sorting (isort)
+  - Format verification to ensure consistent code style
+  - **Pipeline behavior:** ❌ Failures block the pipeline
+
+**2. Testing**
+- **pytest** - Unit testing framework
+  - Runs unit tests for both Lambda functions
+  - Branch coverage analysis with pytest-cov
+  - Mocking of AWS services (S3, DynamoDB, Secrets Manager) using moto
+  - Mocking of external APIs (OpenAI, Twitter)
+  - **Pipeline behavior:** ❌ Test failures block the pipeline
+- **Coverage Reporting:**
+  - Results uploaded to Codecov for tracking
+  - Terminal output with missing coverage report
+
+**3. Security Scanning**
+- **Bandit** - Python SAST (Static Application Security Testing)
+  - Scans Lambda code for common security issues
+  - Severity threshold: High and Critical
+  - Results uploaded to GitHub Security tab (SARIF format)
+- **Gitleaks** - Secret detection
+  - Scans entire repository history for exposed secrets
+  - Prevents API keys, tokens, and credentials from being committed
+- **pip-audit** - Python dependency vulnerability scanning
+  - Checks all dependencies in requirements.txt files
+  - Identifies known CVEs in Python packages
+  - Scans both image_gen and twitter_post dependencies
+- **Trivy** - Infrastructure as Code (IaC) scanning
+  - Scans Terraform configurations for security misconfigurations
+  - Severity threshold: High and Critical
+  - Results uploaded to GitHub Security tab (SARIF format)
+- **Pipeline behavior:** ⚠️ Security findings are reported but don't block deployment (continue-on-error)
+
+**4. Build**
+- Package Lambda function code (.zip files)
+- Build Lambda Layers using official AWS Lambda Docker images
+  - Ensures binary compatibility with Lambda runtime
+  - Separate layers for image_gen and twitter_post dependencies
+- Upload artifacts to S3
+- Update Terraform Cloud workspace variables
+- Conditional layer publishing (controlled via GitHub variable)
+- **Pipeline behavior:** ❌ Build failures block deployment
+
+**5. Deploy**
+- Triggers deployment workflow
+- Requires dev environment approval
+- Updates Lambda functions with new code
+
+### Security Findings
+
+All security scan results are available in the [GitHub Security tab](https://github.com/allenac86/spooky-days-twitter/security) with automated SARIF uploads for Bandit and Trivy scans.
+
+
 ## Roadmap
 
 ### Phase 1: Observability
