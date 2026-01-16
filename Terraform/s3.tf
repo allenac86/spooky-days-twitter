@@ -15,8 +15,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_bucket_enc
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.secrets_manager_key.id
+      kms_master_key_id = aws_kms_key.app_encryption_key.id
     }
+    bucket_key_enabled = true
   }
 }
 
@@ -27,8 +28,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "image_bucket_encr
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.secrets_manager_key.id
+      kms_master_key_id = aws_kms_key.app_encryption_key.id
     }
+    bucket_key_enabled = true
   }
 }
 

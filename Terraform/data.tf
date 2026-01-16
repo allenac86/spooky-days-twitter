@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 data "aws_s3_object" "spooky_days_object" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.bucket
   key    = var.image_lambda_zip_filename

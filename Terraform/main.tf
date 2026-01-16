@@ -138,10 +138,10 @@ resource "aws_iam_policy" "spooky_days_twitter_dynamodb_policy" {
   })
 }
 
-# Grant Image Lambda permission to access secrets
-resource "aws_iam_policy" "image_lambda_secrets_policy" {
-  name        = "${var.app_name}-image-lambda-secrets-policy-${random_string.random.result}"
-  description = "Policy for Image Lambda to access secrets"
+# Grant Image Lambda permission to access secrets and KMS encryption
+resource "aws_iam_policy" "image_lambda_kms_policy" {
+  name        = "${var.app_name}-image-lambda-kms-policy-${random_string.random.result}"
+  description = "Policy for Image Lambda to access Secrets Manager and encrypt S3 objects"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -162,7 +162,7 @@ resource "aws_iam_policy" "image_lambda_secrets_policy" {
           "kms:Encrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = aws_kms_key.secrets_manager_key.arn
+        Resource = aws_kms_key.app_encryption_key.arn
       }
     ]
   })
@@ -188,10 +188,9 @@ resource "aws_iam_policy" "twitter_lambda_secrets_policy" {
         Effect = "Allow"
         Action = [
           "kms:Decrypt",
-          "kms:DescribeKey",
-          "kms:GenerateDataKey"
+          "kms:DescribeKey"
         ]
-        Resource = aws_kms_key.secrets_manager_key.arn
+        Resource = aws_kms_key.app_encryption_key.arn
       }
     ]
   })
@@ -226,9 +225,9 @@ resource "aws_iam_role_policy_attachment" "image_lambda_dynamodb_attachment" {
   policy_arn = aws_iam_policy.spooky_days_image_dynamodb_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "image_lambda_secrets_attachment" {
+resource "aws_iam_role_policy_attachment" "image_lambda_kms_attachment" {
   role       = aws_iam_role.image_lambda_execution_role.name
-  policy_arn = aws_iam_policy.image_lambda_secrets_policy.arn
+  policy_arn = aws_iam_policy.image_lambda_kms_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "image_lambda_logging_attachment" {
