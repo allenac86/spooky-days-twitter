@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        name: ruff linting
+        args: [--fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff formatting
+        types_or: [python, pyi]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+        name: gitleaks secret scanning
