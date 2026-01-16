@@ -111,7 +111,7 @@ def update_dynamodb_record(table_name, job_id, caption, status='posted'):
 def handler(event, context):
     os.chdir('/tmp')
 
-    # only execute the labda function if the event is triggered by an S3 Object Upload
+    # only execute the lambda function if the event is triggered by an S3 Object Upload
     if event['Records'][0]['eventName'] == 'ObjectCreated:Put':
         key = event['Records'][0]['s3']['object']['key']
         job_id = key.replace('images/', '')
