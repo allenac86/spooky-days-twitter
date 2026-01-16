@@ -200,3 +200,126 @@ def test_update_dynamodb_record(mock_env_vars, mock_twitter_creds):
 
             assert mock_dynamodb.query.called
             assert mock_dynamodb.update_item.called
+
+
+def test_update_dynamodb_no_record_found(mock_env_vars, mock_twitter_creds):
+    with patch('boto3.client') as mock_boto:
+        mock_dynamodb = Mock()
+        mock_dynamodb.query.return_value = {'Items': []}
+
+        # Mock exception classes properly
+        mock_exceptions = Mock()
+        mock_exceptions.ResourceNotFoundException = type(
+            'ResourceNotFoundException', (Exception,), {}
+        )
+        mock_exceptions.ConditionalCheckFailedException = type(
+            'ConditionalCheckFailedException', (Exception,), {}
+        )
+        mock_dynamodb.exceptions = mock_exceptions
+
+        mock_secrets = Mock()
+        mock_secrets.get_secret_value.return_value = {
+            'SecretString': json.dumps(mock_twitter_creds)
+        }
+
+        def client_factory(service):
+            if service == 'dynamodb':
+                return mock_dynamodb
+            return mock_secrets
+
+        mock_boto.side_effect = client_factory
+
+        with (
+            patch('tweepy.Client'),
+            patch('tweepy.OAuth1UserHandler'),
+            patch('tweepy.API'),
+        ):
+            from main import update_dynamodb_record
+
+            with pytest.raises(ValueError, match='No record found for job_id'):
+                update_dynamodb_record('table', 'nonexistent.jpg', 'caption', 'posted')
+
+
+def test_handler_twitter_post_failure(
+    mock_env_vars, mock_twitter_creds, s3_event, lambda_context
+):
+    with patch('boto3.client') as mock_boto:
+        mock_s3 = Mock()
+        mock_dynamodb = Mock()
+        mock_secrets = Mock()
+        mock_secrets.get_secret_value.return_value = {
+            'SecretString': json.dumps(mock_twitter_creds)
+        }
+
+        def client_factory(service):
+            if service == 's3':
+                return mock_s3
+            if service == 'dynamodb':
+                return mock_dynamodb
+            return mock_secrets
+
+        mock_boto.side_effect = client_factory
+
+        with (
+            patch('tweepy.Client'),
+            patch('tweepy.OAuth1UserHandler'),
+            patch('tweepy.API') as mock_api_class,
+            patch('os.chdir'),
+        ):
+            mock_api = Mock()
+            mock_api.media_upload.side_effect = Exception('Twitter API Error')
+            mock_api_class.return_value = mock_api
+
+            from main import handler
+
+            response = handler(s3_event, lambda_context)
+
+            assert response['statusCode'] == 500
+            assert 'Error posting tweet' in response['body']
+
+
+def test_handler_dynamodb_update_failure(
+    mock_env_vars, mock_twitter_creds, s3_event, lambda_context
+):
+    with patch('boto3.client') as mock_boto:
+        mock_s3 = Mock()
+        mock_dynamodb = Mock()
+        mock_dynamodb.query.return_value = {
+            'Items': [{'job_id': {'S': 'test'}, 'timestamp': {'N': '123'}}]
+        }
+        mock_dynamodb.update_item.side_effect = Exception('DynamoDB Error')
+        mock_secrets = Mock()
+        mock_secrets.get_secret_value.return_value = {
+            'SecretString': json.dumps(mock_twitter_creds)
+        }
+
+        def client_factory(service):
+            if service == 's3':
+                return mock_s3
+            if service == 'dynamodb':
+                return mock_dynamodb
+            return mock_secrets
+
+        mock_boto.side_effect = client_factory
+
+        with (
+            patch('tweepy.Client') as mock_client,
+            patch('tweepy.OAuth1UserHandler'),
+            patch('tweepy.API') as mock_api_class,
+            patch('os.chdir'),
+        ):
+            mock_api = Mock()
+            mock_media = Mock()
+            mock_media.media_id = 'media-id'
+            mock_api.media_upload.return_value = mock_media
+            mock_api_class.return_value = mock_api
+
+            mock_twitter = Mock()
+            mock_client.return_value = mock_twitter
+
+            from main import handler
+
+            response = handler(s3_event, lambda_context)
+
+            assert response['statusCode'] == 500
+            assert 'Error updating DynamoDB record' in response['body']
