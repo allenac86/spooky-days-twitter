@@ -52,7 +52,7 @@ jobs:
 
       - name: Run Trivy Terraform Scanning
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'config'
           scan-ref: 'Terraform/'
