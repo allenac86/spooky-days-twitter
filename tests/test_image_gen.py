@@ -45,10 +45,7 @@ def test_handler_success(mock_env_vars, mock_config, mock_openai_response, lambd
         mock_s3.get_object.return_value = {'Body': Mock(read=lambda: json.dumps(mock_config).encode())}
         mock_dynamodb = Mock()
         mock_secrets = Mock()
-        mock_secrets.get_secret_value.return_value = {
-            'SecretString': json.dumps({'ACCESS_TOKEN': 'token', 'ACCESS_TOKEN_SECRET': 'secret', 
-                                       'API_KEY': 'key', 'API_SECRET': 'secret', 'BEARER_TOKEN': 'bearer'})
-        }
+        mock_secrets.get_secret_value.return_value = {'SecretString': 'test-api-key'}
         
         def client_factory(service):
             if service == 's3': return mock_s3
@@ -77,10 +74,7 @@ def test_handler_failure(mock_env_vars, mock_config, lambda_context):
         mock_s3 = Mock()
         mock_s3.get_object.return_value = {'Body': Mock(read=lambda: json.dumps(mock_config).encode())}
         mock_secrets = Mock()
-        mock_secrets.get_secret_value.return_value = {
-            'SecretString': json.dumps({'ACCESS_TOKEN': 'token', 'ACCESS_TOKEN_SECRET': 'secret',
-                                       'API_KEY': 'key', 'API_SECRET': 'secret', 'BEARER_TOKEN': 'bearer'})
-        }
+        mock_secrets.get_secret_value.return_value = {'SecretString': 'test-api-key'}
         
         def client_factory(service):
             return mock_secrets if service == 'secretsmanager' else mock_s3
