@@ -30,6 +30,9 @@ jobs:
 
   security-scan:
     needs: test
+    permissions:
+      contents: read
+      security-events: write
     uses: ./.github/workflows/security-scan.yml
 
   build:
