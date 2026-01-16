@@ -52,7 +52,7 @@ s3_client = boto3.client('s3')
 
 
 def post_image_to_twitter(text_content, file_path):
-    myMedia = rf'{file_path}'
+    myMedia = file_path
     media = api.media_upload(filename=myMedia)
     media_id = media.media_id
     twitter.create_tweet(text=text_content, media_ids=[media_id])
