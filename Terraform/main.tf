@@ -158,7 +158,9 @@ resource "aws_iam_policy" "image_lambda_secrets_policy" {
         Effect = "Allow"
         Action = [
           "kms:Decrypt",
-          "kms:DescribeKey"
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey"
         ]
         Resource = aws_kms_key.secrets_manager_key.arn
       }
@@ -186,7 +188,8 @@ resource "aws_iam_policy" "twitter_lambda_secrets_policy" {
         Effect = "Allow"
         Action = [
           "kms:Decrypt",
-          "kms:DescribeKey"
+          "kms:DescribeKey",
+          "kms:GenerateDataKey"
         ]
         Resource = aws_kms_key.secrets_manager_key.arn
       }

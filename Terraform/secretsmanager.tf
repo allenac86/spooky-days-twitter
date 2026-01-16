@@ -1,15 +1,3 @@
-# KMS Key for Secrets Manager Encryption
-resource "aws_kms_key" "secrets_manager_key" {
-  description             = "KMS key for encrypting Secrets Manager secrets"
-  deletion_window_in_days = 10
-  enable_key_rotation     = true
-}
-
-resource "aws_kms_alias" "secrets_manager_key_alias" {
-  name          = "alias/${var.app_name}-secrets-key"
-  target_key_id = aws_kms_key.secrets_manager_key.key_id
-}
-
 # Secret for Image Gen Lambda
 resource "aws_secretsmanager_secret" "image_gen_secrets" {
   name                    = "${var.app_name}-image-gen-secrets-${random_string.random.result}"
