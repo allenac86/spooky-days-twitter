@@ -116,39 +116,46 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
 
 All security scan results are available in the [GitHub Security tab](https://github.com/allenac86/spooky-days-twitter/security) with automated SARIF uploads for Bandit and Trivy scans.
 
+### Pre-Commit Hooks
+
+The repository includes pre-commit hooks to catch issues before they're committed:
+
+**Setup (one-time):**
+```bash
+python -m pip install pre-commit
+python -m pre_commit install
+```
+
+**Hooks configured:**
+- **Ruff** - Auto-fixes linting issues and formats code before commit
+- **Gitleaks** - Blocks commits containing secrets or credentials
+
+The hooks run automatically on `git commit`. To manually run on all files:
+```bash
+python -m pre_commit run --all-files
+```
+
 
 ## Roadmap
 
-### Phase 1: Observability
-- Integrate AWS Lambda Powertools (structured logging, correlation IDs, custom metrics)
+### Observability
 - Enable X-Ray tracing on both Lambdas
 - Create CloudWatch dashboards with key metrics
 - Configure CloudWatch alarms with SNS notifications
 
-### Phase 2: Security
-- Add security scanning to CI pipeline (Gitleaks, Bandit, pip-audit, Checkov, Trivy)
-- Implement Secrets Manager rotation
+### Testing & Quality
+- Increase code coverage (currently at 66% for core functionality)
 
-### Phase 3: Testing & Quality
-- Add unit tests with pytest (80% coverage requirement)
-- Add pre-commit hooks (Ruff, Mypy, Gitleaks)
-- Mock external API calls (AWS, OpenAI, Twitter) in tests
-
-### Phase 4: CI/CD Improvements
-- Add quality gate workflow (linting, type checking, security scans)
-- Implement automated testing in pipeline
-- Add manual approval gates for deployments
-
-### Phase 5: Infrastructure Enhancements
+### Infrastructure Enhancements
 - Configure Dead Letter Queues for both Lambdas
 - Add idempotency decorator for twitter_post Lambda
 - Enhance retry logic with exponential backoff
 
-### Phase 6: Documentation
+### Documentation
 - Document threat model
 - Add cost estimate breakdown
 
-### Phase 7: Multi-Environment (Stretch Goal)
+### Multi-Environment (Stretch Goal)
 - Create separate dev and prod Terraform Cloud workspaces
 - Implement environment-specific configurations
 - Add promotion pipeline with approval gates
