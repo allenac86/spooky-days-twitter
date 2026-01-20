@@ -1,21 +1,14 @@
 name: cd
 
 on:
-  workflow_call:
-    inputs:
-      tfe_token:
-        required: true
-        type: string
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
-      - name: Mask secrets
-        run: |
-          echo "::add-mask::${{ inputs.tfe_token }}"
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -23,7 +16,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
             terraform_version: 1.6.6
-            cli_config_credentials_token: ${{ inputs.tfe_token }}
+            cli_config_credentials_token: ${{ secrets.TFE_TOKEN }}
   
       - name: Terraform Init
         run: terraform init

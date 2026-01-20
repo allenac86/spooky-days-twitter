@@ -6,86 +6,210 @@ on:
       - main
 
 jobs:
-  get-secrets:
+  lint_python:
     runs-on: ubuntu-latest
-    environment: dev
-    outputs:
-      s3_bucket: ${{ steps.set-outputs.outputs.s3_bucket }}
-      aws_access_key_id: ${{ steps.set-outputs.outputs.aws_access_key_id }}
-      aws_secret_access_key: ${{ steps.set-outputs.outputs.aws_secret_access_key }}
-      tfe_token: ${{ steps.set-outputs.outputs.tfe_token }}
-      tfe_image_var_id: ${{ steps.set-outputs.outputs.tfe_image_var_id }}
-      tfe_image_key: ${{ steps.set-outputs.outputs.tfe_image_key }}
-      tfe_twitter_var_id: ${{ steps.set-outputs.outputs.tfe_twitter_var_id }}
-      tfe_twitter_key: ${{ steps.set-outputs.outputs.tfe_twitter_key }}
-      tfe_gallery_var_id: ${{ steps.set-outputs.outputs.tfe_gallery_var_id }}
-      tfe_gallery_key: ${{ steps.set-outputs.outputs.tfe_gallery_key }}
-      tfe_image_layer_var_id: ${{ steps.set-outputs.outputs.tfe_image_layer_var_id }}
-      tfe_twitter_layer_var_id: ${{ steps.set-outputs.outputs.tfe_twitter_layer_var_id }}
-      tfe_workspace_id: ${{ steps.set-outputs.outputs.tfe_workspace_id }}
-    steps:
-      - name: Set outputs
-        id: set-outputs
-        run: |
-          echo "s3_bucket=${{ secrets.S3_BUCKET }}" >> $GITHUB_OUTPUT
-          echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
-          echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_OUTPUT
-          echo "tfe_token=${{ secrets.TFE_TOKEN }}" >> $GITHUB_OUTPUT
-          echo "tfe_image_var_id=${{ secrets.TFE_IMAGE_VAR_ID }}" >> $GITHUB_OUTPUT
-          echo "tfe_image_key=${{ secrets.TFE_IMAGE_KEY }}" >> $GITHUB_OUTPUT
-          echo "tfe_twitter_var_id=${{ secrets.TFE_TWITTER_VAR_ID }}" >> $GITHUB_OUTPUT
-          echo "tfe_twitter_key=${{ secrets.TFE_TWITTER_KEY }}" >> $GITHUB_OUTPUT
-          echo "tfe_gallery_var_id=${{ secrets.TFE_GALLERY_VAR_ID }}" >> $GITHUB_OUTPUT
-          echo "tfe_gallery_key=${{ secrets.TFE_GALLERY_KEY }}" >> $GITHUB_OUTPUT
-          echo "tfe_image_layer_var_id=${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}" >> $GITHUB_OUTPUT
-          echo "tfe_twitter_layer_var_id=${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}" >> $GITHUB_OUTPUT
-          echo "tfe_workspace_id=${{ secrets.TFE_WORKSPACE_ID }}" >> $GITHUB_OUTPUT
 
-  lint:
-    permissions:
-      contents: read
-      actions: write
-    uses: ./.github/workflows/lint.yml
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Ruff
+        run: python -m pip install ruff
+
+      - name: Run Ruff Linting
+        run: ruff check Lambdas/ tests/
+
+      - name: Run Ruff Format Check
+        run: ruff format --check Lambdas/ tests/
+
+  lint_node:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      
+      - name: Install Dependencies
+        run: |
+          cd Lambdas/gallery_api
+          npm install
+
+      - name: Run ESLint
+        run: |
+          cd Lambdas/gallery_api
+          npm run lint
 
   test:
-    permissions:
-      contents: read
-      actions: write
-    uses: ./.github/workflows/test.yml
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Run Python Unit Tests
+        run: |
+          python -m pip install -r tests/requirements-test.txt
+          python -m pytest tests --cov=Lambdas --cov-branch --cov-report=term-missing --cov-report=xml
+
+      - name: Upload Python Coverage Reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Run Node.js Unit Tests
+        run: |
+          cd Lambdas/gallery_api
+          npm install
+          npm test
+
+      - name: Upload Node.js Coverage Reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./Lambdas/gallery_api/coverage/lcov.info
+          flags: nodejs
+          name: Node.js Coverage
 
   security-scan:
+    runs-on: ubuntu-latest
+    environment: dev
     permissions:
-      contents: read
-      security-events: write
       actions: write
-    uses: ./.github/workflows/security-scan.yml
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Trigger Security Scan Workflow
+        run: gh workflow run security-scan.yml --ref ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   build:
-    needs: [get-secrets, lint, test, security-scan]
-    permissions:
-      contents: read
-      actions: write
-    uses: ./.github/workflows/build.yml
-    with:
-      s3_bucket: ${{ needs.get-secrets.outputs.s3_bucket }}
-      aws_access_key_id: ${{ needs.get-secrets.outputs.aws_access_key_id }}
-      aws_secret_access_key: ${{ needs.get-secrets.outputs.aws_secret_access_key }}
-      tfe_token: ${{ needs.get-secrets.outputs.tfe_token }}
-      tfe_image_var_id: ${{ needs.get-secrets.outputs.tfe_image_var_id }}
-      tfe_image_key: ${{ needs.get-secrets.outputs.tfe_image_key }}
-      tfe_twitter_var_id: ${{ needs.get-secrets.outputs.tfe_twitter_var_id }}
-      tfe_twitter_key: ${{ needs.get-secrets.outputs.tfe_twitter_key }}
-      tfe_gallery_var_id: ${{ needs.get-secrets.outputs.tfe_gallery_var_id }}
-      tfe_gallery_key: ${{ needs.get-secrets.outputs.tfe_gallery_key }}
-      tfe_image_layer_var_id: ${{ needs.get-secrets.outputs.tfe_image_layer_var_id }}
-      tfe_twitter_layer_var_id: ${{ needs.get-secrets.outputs.tfe_twitter_layer_var_id }}
-      tfe_workspace_id: ${{ needs.get-secrets.outputs.tfe_workspace_id }}
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [lint_python, lint_node, test, security-scan]
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_OUTPUT: json
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Package Python Lambda Functions
+        run: |
+          cd Lambdas/image_gen
+          zip -r ../../image_gen.zip main.py
+          cd ../..
+          cd Lambdas/twitter_post
+          zip -r ../../twitter_post.zip main.py
+          cd ../..
+          ls -la
+          echo "Contents of image_gen.zip:"
+          unzip -l image_gen.zip
+          echo "Contents of twitter_post.zip:"
+          unzip -l twitter_post.zip
+
+      - name: Package Node Lambda Function
+        run: |
+          cd Lambdas/gallery_api
+          npm install
+          npm run build
+          zip -r ../../gallery_api.zip dist/src/ node_modules/ package.json
+          cd ../..
+          ls -la
+          echo "Contents of gallery_api.zip:"
+          unzip -l gallery_api.zip | head -20
+
+      - name: Package Python Lambda Layers
+        run: |
+          docker run --rm --entrypoint /bin/bash -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
+            -c "pip install -r /workspace/Lambdas/image_gen/requirements.txt -t /workspace/layer_image_gen/python && chown -R $(id -u):$(id -g) /workspace/layer_image_gen"
+          cd layer_image_gen
+          zip -r ../image_gen_layer.zip python
+          cd ..
+          docker run --rm --entrypoint /bin/bash -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
+            -c "pip install -r /workspace/Lambdas/twitter_post/requirements.txt -t /workspace/layer_twitter_post/python && chown -R $(id -u):$(id -g) /workspace/layer_twitter_post"
+          cd layer_twitter_post
+          zip -r ../twitter_post_layer.zip python
+          cd ..
+          ls -la
+          echo "Contents of image_gen_layer.zip:"
+          unzip -l image_gen_layer.zip | head -20
+          echo "Contents of twitter_post_layer.zip:"
+          unzip -l twitter_post_layer.zip | head -20
+
+      - name: Upload Zip Files to S3
+        run: |
+          aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
+          aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
+          aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
+          
+      - name: Update Lambda Filename TFE Variable Values
+        run: |
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_KEY }}","value":"twitter_post.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_GALLERY_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_GALLERY_KEY }}","value":"gallery_api.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_GALLERY_VAR_ID }}"
+      - name: Upload Python Lambda Layers
+        if: ${{ vars.UPLOAD_LAYERS == 'true' }}
+        run: |
+          aws lambda publish-layer-version \
+            --layer-name image_gen_layer \
+            --zip-file fileb://image_gen_layer.zip \
+            --compatible-runtimes python3.10 \
+            --description "Dependencies for image generation lambda"
+          
+          aws lambda publish-layer-version \
+            --layer-name twitter_post_layer \
+            --zip-file fileb://twitter_post_layer.zip \
+            --compatible-runtimes python3.10 \
+            --description "Dependencies for twitter post lambda"
+
+      - name: Update Python Lambda Layer Filename TFE Variable Values
+        if: ${{ vars.UPLOAD_LAYERS == 'true' }}
+        run: |
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
 
   deploy:
-    needs: [get-secrets, lint, test, security-scan, build]
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [lint_python, lint_node, test, security-scan, build]
     permissions:
-      contents: read
       actions: write
-    uses: ./.github/workflows/cd.yml
-    with:
-      tfe_token: ${{ needs.get-secrets.outputs.tfe_token }}
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Trigger Deployment Workflow
+        run: gh workflow run deploy.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
