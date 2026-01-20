@@ -1,7 +1,7 @@
 # spooky-days-twitter
 
-[![CI](https://github.com/allenac86/spooky-days-twitter/actions/workflows/build.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/ci.yml)
-[![CD](https://github.com/allenac86/spooky-days-twitter/actions/workflows/deploy.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/cd.yml)
+[![CI](https://github.com/allenac86/spooky-days-twitter/actions/workflows/ci.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/ci.yml)
+[![CD](https://github.com/allenac86/spooky-days-twitter/actions/workflows/cd.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/cd.yml)
 [![Security Scan](https://github.com/allenac86/spooky-days-twitter/actions/workflows/security-scan.yml/badge.svg)](https://github.com/allenac86/spooky-days-twitter/actions/workflows/security-scan.yml)
 [![Code Coverage](https://codecov.io/gh/allenac86/spooky-days-twitter/branch/main/graph/badge.svg)](https://codecov.io/gh/allenac86/spooky-days-twitter)
 
@@ -63,14 +63,20 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
   - Checks for code quality issues (pyflakes, bugbear, pyupgrade)
   - Import sorting (isort)
   - Format verification to ensure consistent code style
+- **ESLint** - JavaScript/TypeScript linter for Node.js Lambda
+  - Enforces code quality and style for gallery API Lambda
+  - Flat config with modern rules
   - **Pipeline behavior:** ❌ Failures block the pipeline
 
 **2. Testing**
-- **pytest** - Unit testing framework
-  - Runs unit tests for both Lambda functions
+- **pytest** - Unit testing framework for the Python Lambdas
+  - Runs unit tests for image_gen and twitter_post Lambdas
   - Branch coverage analysis with pytest-cov
   - Mocking of AWS services (S3, DynamoDB, Secrets Manager) using moto
   - Mocking of external APIs (OpenAI, Twitter)
+- **Jest** - Unit testing framework for the Node.js Lambda
+  - Runs unit tests for gallery API Lambda
+  - Coverage reporting with LCOV
   - **Pipeline behavior:** ❌ Test failures block the pipeline
 - **Coverage Reporting:**
   - Results uploaded to Codecov for tracking
@@ -88,6 +94,11 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
   - Checks all dependencies in requirements.txt files
   - Identifies known CVEs in Python packages
   - Scans both image_gen and twitter_post dependencies
+- **Semgrep** - Node.js SAST
+  - Scans gallery API Lambda for security issues
+  - Results uploaded to GitHub Security tab (SARIF format)
+- **npm audit** - Node.js dependency vulnerability scanning
+  - Checks dependencies in gallery API Lambda
 - **Trivy** - Infrastructure as Code (IaC) scanning
   - Scans Terraform configurations for security misconfigurations
   - Severity threshold: High and Critical
