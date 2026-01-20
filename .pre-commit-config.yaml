@@ -10,6 +10,16 @@ repos:
         name: ruff formatting
         types_or: [python, pyi]
 
+  - repo: local
+    hooks:
+      - id: eslint-gallery-api
+        name: eslint gallery api
+        entry: cmd /c "cd Lambdas/gallery_api && npm run lint"
+        language: system
+        files: ^Lambdas/gallery_api/src/
+        types: [ts]
+        pass_filenames: false
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.1
     hooks:
