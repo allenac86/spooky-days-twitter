@@ -7,18 +7,32 @@ on:
 
 jobs:
   lint:
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/lint.yml
 
   test:
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/test.yml
 
   security-scan:
+    permissions:
+      contents: read
+      security-events: write
+      actions: write
     uses: ./.github/workflows/security-scan.yml
 
   build:
-    needs: [lint, test, security-scan]
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/build.yml
 
   deploy:
-    needs: [lint, test, security-scan, build]
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/cd.yml
