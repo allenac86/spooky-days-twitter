@@ -210,6 +210,6 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Trigger Deployment Workflow
-        run: gh workflow run deploy.yml
+        run: gh workflow run cd.yml --ref ${{ github.ref_name }}
         env:
           GH_TOKEN: ${{ github.token }}
