@@ -136,26 +136,37 @@ python -m pre_commit run --all-files
 ```
 
 
-## Roadmap
+### Roadmap
 
-### Observability
-- Enable X-Ray tracing on both Lambdas
-- Create CloudWatch dashboards with key metrics
-- Configure CloudWatch alarms with SNS notifications
-
-### Testing & Quality
-- Increase code coverage (currently at 66% for core functionality)
-
-### Infrastructure Enhancements
-- Configure Dead Letter Queues for both Lambdas
+### Reliability & Error Handling
+- Add SQS-based retry and DLQ for both image generation and Twitter Lambdas
+- On failure, event is retried after 20 minutes via SQS
+- Second failure sends event to DLQ
 - Add idempotency decorator for twitter_post Lambda
 - Enhance retry logic with exponential backoff
+
+### Frontend & User Experience
+- Build a React frontend (Vite + React Bootstrap) to display a gallery of all images posted to Twitter
+- Host the frontend as a static site on S3, served via CloudFront with TLS and a custom domain managed by Route 53
+- Add an admin dashboard protected by Cognito authentication to manually trigger adhoc image generation and view twitter account metrics
+
+### API & Security
+- Implement a Node.js/TypeScript Lambda for gallery and admin API
+- Route API requests through API Gateway, secured with Cognito User Pool authorizer
+- Log all admin/API actions to DynamoDB for audit
+
+### Testing & Quality
+- Refactor all Lambda tests into organized subdirectories under `/tests/` -- IN PROGRESS --
+- Add Jest and ESLint tooling for Node.js Lambda, with pre-commit hooks and security scanning
+- Maintain high code coverage and CI/CD quality gates for the new Lambda and UI
+
+### Observability
+- Enable X-Ray tracing and CloudWatch dashboards for all Lambdas
+- Configure alarms for Lambda errors, DLQ messages, and API failures
 
 ### Documentation
 - Document threat model
 - Add cost estimate breakdown
 
-### Multi-Environment (Stretch Goal)
-- Create separate dev and prod Terraform Cloud workspaces
-- Implement environment-specific configurations
-- Add promotion pipeline with approval gates
+### Multi-Environment (Stretch)
+- Support separate dev and prod environments via Terraform Cloud

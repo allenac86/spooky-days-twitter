@@ -165,3 +165,8 @@ cython_debug/
 **/national-days.json
 **/tfe-data.json
 .ruff_cache
+
+**/node_modules
+**/node_modules/**
+**/coverage
+**/coverage/**

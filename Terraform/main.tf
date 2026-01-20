@@ -1,5 +1,7 @@
 locals {
   cloudwatch_rule_name               = "${var.app_name}-lambda-schedule-rule-${random_string.random.result}"
+  gallery_lambda_execution_role_name = "${var.app_name}-gallery-api-lambda-execution-role-${random_string.random.result}"
+  gallery_lambda_function_name       = "${var.app_name}-gallery-api-lambda-function-${random_string.random.result}"
   image_lambda_execution_role_name   = "${var.app_name}-image-gen-lambda-execution-role-${random_string.random.result}"
   image_lambda_function_name         = "${var.app_name}-image-lambda-function-${random_string.random.result}"
   twitter_lambda_execution_role_name = "${var.app_name}-twitter-lambda-execution-role-${random_string.random.result}"
@@ -52,6 +54,25 @@ resource "aws_iam_role" "twitter_lambda_execution_role" {
   })
 }
 
+# IAM Role for Gallery Lambda Execution
+resource "aws_iam_role" "gallery_lambda_execution_role" {
+  name = local.gallery_lambda_execution_role_name
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      }
+    ]
+  })
+}
+
 # Grant the Image Lambda function permission to upload files to the image bucket
 resource "aws_iam_policy" "spooky_days_image_bucket_policy" {
   policy = jsonencode({
@@ -72,6 +93,27 @@ resource "aws_iam_policy" "spooky_days_image_bucket_policy" {
 
 # Grant the Twitter Lambda function permission to read s3 bucket events for execution
 resource "aws_iam_policy" "spooky_days_twitter_bucket_policy" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "${aws_s3_bucket.spooky_days_image_bucket.arn}",
+          "${aws_s3_bucket.spooky_days_image_bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Grant the Gallery API Lambda function permission to access the image bucket
+resource "aws_iam_policy" "spooky_days_gallery_bucket_policy" {
+  name = "${var.app_name}-gallery-lambda-s3-policy-${random_string.random.result}"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -138,8 +180,32 @@ resource "aws_iam_policy" "spooky_days_twitter_dynamodb_policy" {
   })
 }
 
+# Grant the Gallery API Lambda function permission to access DynamoDB
+resource "aws_iam_policy" "spooky_days_gallery_dynamodb_policy" {
+  name = "${var.app_name}-gallery-lambda-dynamodb-policy-${random_string.random.result}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.spooky_days_api_table.arn,
+          "${aws_dynamodb_table.spooky_days_api_table.arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # Grant Image Lambda permission to access secrets and KMS encryption
-resource "aws_iam_policy" "image_lambda_kms_policy" {
+resource "aws_iam_policy" "image_lambda_secrets_policy" {
   name        = "${var.app_name}-image-lambda-kms-policy-${random_string.random.result}"
   description = "Policy for Image Lambda to access Secrets Manager and encrypt S3 objects"
 
@@ -196,6 +262,34 @@ resource "aws_iam_policy" "twitter_lambda_secrets_policy" {
   })
 }
 
+# Grant Gallery API Lambda permission to access secrets
+resource "aws_iam_policy" "gallery_lambda_secrets_policy" {
+  name        = "${var.app_name}-gallery-lambda-secrets-policy-${random_string.random.result}"
+  description = "Policy for Gallery API Lambda to access secrets"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = aws_secretsmanager_secret.twitter_secrets.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = aws_kms_key.app_encryption_key.arn
+      }
+    ]
+  })
+}
+
 # IAM Policy to Allow Lambda Functions to Write Logs
 resource "aws_iam_policy" "lambda_logging_policy" {
   name = "lambda_logging_policy"
@@ -215,7 +309,7 @@ resource "aws_iam_policy" "lambda_logging_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_s3_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "image_lambda_s3_attachment" {
   role       = aws_iam_role.image_lambda_execution_role.name
   policy_arn = aws_iam_policy.spooky_days_image_bucket_policy.arn
 }
@@ -225,9 +319,9 @@ resource "aws_iam_role_policy_attachment" "image_lambda_dynamodb_attachment" {
   policy_arn = aws_iam_policy.spooky_days_image_dynamodb_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "image_lambda_kms_attachment" {
+resource "aws_iam_role_policy_attachment" "image_lambda_secrets_attachment" {
   role       = aws_iam_role.image_lambda_execution_role.name
-  policy_arn = aws_iam_policy.image_lambda_kms_policy.arn
+  policy_arn = aws_iam_policy.image_lambda_secrets_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "image_lambda_logging_attachment" {
@@ -235,7 +329,7 @@ resource "aws_iam_role_policy_attachment" "image_lambda_logging_attachment" {
   policy_arn = aws_iam_policy.lambda_logging_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_s3_read_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "twitter_lambda_s3_attachment" {
   role       = aws_iam_role.twitter_lambda_execution_role.name
   policy_arn = aws_iam_policy.spooky_days_twitter_bucket_policy.arn
 }
@@ -255,13 +349,24 @@ resource "aws_iam_role_policy_attachment" "twitter_lambda_logging_attachment" {
   policy_arn = aws_iam_policy.lambda_logging_policy.arn
 }
 
-# Grant the Image Gen Lambda function permission to access the S3 bucket
-resource "aws_lambda_permission" "allow_image_lambda_bucket_access" {
-  statement_id  = "AllowExecutionFromLambda"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.spooky_days_image_lambda_function.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.spooky_days_lambda_bucket.arn
+resource "aws_iam_role_policy_attachment" "gallery_lambda_s3_attachment" {
+  role       = aws_iam_role.gallery_lambda_execution_role.name
+  policy_arn = aws_iam_policy.spooky_days_gallery_bucket_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "gallery_lambda_dynamodb_attachment" {
+  role       = aws_iam_role.gallery_lambda_execution_role.name
+  policy_arn = aws_iam_policy.spooky_days_gallery_dynamodb_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "gallery_lambda_secrets_attachment" {
+  role       = aws_iam_role.gallery_lambda_execution_role.name
+  policy_arn = aws_iam_policy.gallery_lambda_secrets_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "gallery_lambda_logging_attachment" {
+  role       = aws_iam_role.gallery_lambda_execution_role.name
+  policy_arn = aws_iam_policy.lambda_logging_policy.arn
 }
 
 # Permission for CloudWatch to trigger the Image Gen Lambda
