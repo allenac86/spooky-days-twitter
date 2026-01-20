@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Trigger Lint Workflow
         run: gh workflow run lint.yml --ref ${{ github.ref_name }}
         env:
@@ -19,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Trigger Test Workflow
         run: gh workflow run test.yml --ref ${{ github.ref_name }}
         env:
@@ -32,6 +38,9 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Trigger Security Scan Workflow
         run: gh workflow run security-scan.yml --ref ${{ github.ref_name }}
         env:
@@ -42,6 +51,9 @@ jobs:
     needs: [lint, test, security-scan]
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Trigger Build Workflow
         run: gh workflow run build.yml --ref ${{ github.ref_name }}
         env:
@@ -55,6 +67,9 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
       - name: Trigger Deployment Workflow
         run: gh workflow run cd.yml --ref ${{ github.ref_name }}
         env:
