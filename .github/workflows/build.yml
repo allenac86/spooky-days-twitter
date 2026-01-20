@@ -114,7 +114,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Package Lambda Functions
+      - name: Package Python Lambda Functions
         run: |
           cd Lambdas/image_gen
           zip -r ../../image_gen.zip main.py
@@ -128,7 +128,18 @@ jobs:
           echo "Contents of twitter_post.zip:"
           unzip -l twitter_post.zip
 
-      - name: Package Lambda Layers
+      - name: Package Node Lambda Function
+        run: |
+          cd Lambdas/gallery_api
+          npm install
+          npm run build
+          zip -r ../../gallery_api.zip dist/ node_modules/ package.json
+          cd ../..
+          ls -la
+          echo "Contents of gallery_api.zip:"
+          unzip -l gallery_api.zip | head -20
+
+      - name: Package Python Lambda Layers
         run: |
           docker run --rm --entrypoint /bin/bash -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
             -c "pip install -r /workspace/Lambdas/image_gen/requirements.txt -t /workspace/layer_image_gen/python && chown -R $(id -u):$(id -g) /workspace/layer_image_gen"
@@ -150,13 +161,14 @@ jobs:
         run: |
           aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
           aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
+          aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
           
       - name: Update Lambda Filename TFE Variable Values
         run: |
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_KEY }}","value":"twitter_post.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
-
-      - name: Upload Lambda Layers
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_GALLERY_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_GALLERY_KEY }}","value":"gallery_api.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_GALLERY_VAR_ID }}"
+      - name: Upload Python Lambda Layers
         if: ${{ vars.UPLOAD_LAYERS == 'true' }}
         run: |
           aws lambda publish-layer-version \
@@ -171,7 +183,7 @@ jobs:
             --compatible-runtimes python3.10 \
             --description "Dependencies for twitter post lambda"
 
-      - name: Update Lambda Layer Filename TFE Variable Values
+      - name: Update Python Lambda Layer Filename TFE Variable Values
         if: ${{ vars.UPLOAD_LAYERS == 'true' }}
         run: |
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
