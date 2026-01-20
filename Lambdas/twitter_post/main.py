@@ -6,7 +6,7 @@ import boto3
 import tweepy
 from aws_lambda_powertools import Logger
 
-logger = Logger(service='twitter_post')
+logger = Logger(service='twitter_post_lambda')
 
 twitter_secret_arn = os.environ['TWITTER_SECRET_ARN']
 dynamodb_table_name = os.environ['DYNAMODB_TABLE_NAME']

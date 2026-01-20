@@ -34,6 +34,12 @@ variable "twitter_lambda_zip_filename" {
   default     = null
 }
 
+variable "gallery_lambda_zip_filename" {
+  description = "Filename of the Gallery API Lambda zip file."
+  type        = string
+  default     = null
+}
+
 variable "image_lambda_layer_name" {
   description = "Name of the OpenAI Lambda layer."
   type        = string
@@ -88,8 +94,14 @@ variable "twitter_access_token_secret" {
   default     = null
 }
 
-variable "dynamodb_table_name" {
+variable "dynamodb_image_table_name" {
   description = "DynamoDB table name"
+  type        = string
+  default     = null
+}
+
+variable "dynamodb_api_table_name" {
+  description = "DynamoDB table name for Gallery API"
   type        = string
   default     = null
 }

@@ -17,7 +17,7 @@ resource "aws_lambda_function" "spooky_days_image_lambda_function" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE_NAME = var.dynamodb_table_name
+      DYNAMODB_TABLE_NAME = var.dynamodb_image_table_name
       IMAGE_BUCKET_NAME   = var.image_bucket_name
       OPENAI_SECRET_ARN   = aws_secretsmanager_secret.image_gen_secrets.arn
     }
@@ -43,7 +43,29 @@ resource "aws_lambda_function" "spooky_days_twitter_lambda_function" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE_NAME = var.dynamodb_table_name
+      DYNAMODB_TABLE_NAME = var.dynamodb_image_table_name
+      IMAGE_BUCKET_NAME   = var.image_bucket_name
+      TWITTER_SECRET_ARN  = aws_secretsmanager_secret.twitter_secrets.arn
+    }
+  }
+}
+
+# Gallery API Lambda Function
+resource "aws_lambda_function" "spooky_days_gallery_api_lambda_function" {
+  function_name    = local.gallery_lambda_function_name
+  role             = aws_iam_role.gallery_lambda_execution_role.arn
+  handler          = "handler.handler"
+  s3_bucket        = aws_s3_bucket.spooky_days_lambda_bucket.bucket
+  s3_key           = data.aws_s3_object.spooky_days_object_gallery.key
+  source_code_hash = data.aws_s3_object.spooky_days_object_gallery.etag
+
+  runtime = "nodejs22.x"
+
+  timeout = 120
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE_NAME = var.dynamodb_api_table_name
       IMAGE_BUCKET_NAME   = var.image_bucket_name
       TWITTER_SECRET_ARN  = aws_secretsmanager_secret.twitter_secrets.arn
     }
