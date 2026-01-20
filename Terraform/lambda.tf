@@ -54,7 +54,7 @@ resource "aws_lambda_function" "spooky_days_twitter_lambda_function" {
 resource "aws_lambda_function" "spooky_days_gallery_api_lambda_function" {
   function_name    = local.gallery_lambda_function_name
   role             = aws_iam_role.gallery_lambda_execution_role.arn
-  handler          = "handler.handler"
+  handler          = "dist/src/handler.handler"
   s3_bucket        = aws_s3_bucket.spooky_days_lambda_bucket.bucket
   s3_key           = data.aws_s3_object.spooky_days_object_gallery.key
   source_code_hash = data.aws_s3_object.spooky_days_object_gallery.etag

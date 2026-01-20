@@ -133,7 +133,7 @@ jobs:
           cd Lambdas/gallery_api
           npm install
           npm run build
-          zip -r ../../gallery_api.zip dist/ node_modules/ package.json
+          zip -r ../../gallery_api.zip dist/src/ node_modules/ package.json
           cd ../..
           ls -la
           echo "Contents of gallery_api.zip:"
