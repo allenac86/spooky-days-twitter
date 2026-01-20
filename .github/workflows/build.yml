@@ -2,19 +2,75 @@ name: build
 
 on:
   workflow_call:
+    inputs:
+      s3_bucket:
+        required: true
+        type: string
+      aws_access_key_id:
+        required: true
+        type: string
+      aws_secret_access_key:
+        required: true
+        type: string
+      tfe_token:
+        required: true
+        type: string
+      tfe_image_var_id:
+        required: true
+        type: string
+      tfe_image_key:
+        required: true
+        type: string
+      tfe_twitter_var_id:
+        required: true
+        type: string
+      tfe_twitter_key:
+        required: true
+        type: string
+      tfe_gallery_var_id:
+        required: true
+        type: string
+      tfe_gallery_key:
+        required: true
+        type: string
+      tfe_image_layer_var_id:
+        required: true
+        type: string
+      tfe_twitter_layer_var_id:
+        required: true
+        type: string
+      tfe_workspace_id:
+        required: true
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: dev
 
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+      AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
       AWS_DEFAULT_REGION: us-east-1
       AWS_DEFAULT_OUTPUT: json
+      S3_BUCKET: ${{ inputs.s3_bucket }}
+      TFE_TOKEN: ${{ inputs.tfe_token }}
+      TFE_IMAGE_VAR_ID: ${{ inputs.tfe_image_var_id }}
+      TFE_IMAGE_KEY: ${{ inputs.tfe_image_key }}
+      TFE_TWITTER_VAR_ID: ${{ inputs.tfe_twitter_var_id }}
+      TFE_TWITTER_KEY: ${{ inputs.tfe_twitter_key }}
+      TFE_GALLERY_VAR_ID: ${{ inputs.tfe_gallery_var_id }}
+      TFE_GALLERY_KEY: ${{ inputs.tfe_gallery_key }}
+      TFE_IMAGE_LAYER_VAR_ID: ${{ inputs.tfe_image_layer_var_id }}
+      TFE_TWITTER_LAYER_VAR_ID: ${{ inputs.tfe_twitter_layer_var_id }}
+      TFE_WORKSPACE_ID: ${{ inputs.tfe_workspace_id }}
 
     steps:
+      - name: Mask secrets
+        run: |
+          echo "::add-mask::${{ inputs.aws_access_key_id }}"
+          echo "::add-mask::${{ inputs.aws_secret_access_key }}"
+          echo "::add-mask::${{ inputs.tfe_token }}"
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -63,15 +119,15 @@ jobs:
 
       - name: Upload Zip Files to S3
         run: |
-          aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
-          aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
-          aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
+          aws s3 cp image_gen.zip ${{ env.S3_BUCKET }}/image_gen.zip
+          aws s3 cp twitter_post.zip ${{ env.S3_BUCKET }}/twitter_post.zip
+          aws s3 cp gallery_api.zip ${{ env.S3_BUCKET }}/gallery_api.zip
           
       - name: Update Lambda Filename TFE Variable Values
         run: |
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_KEY }}","value":"twitter_post.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_GALLERY_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_GALLERY_KEY }}","value":"gallery_api.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_GALLERY_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ env.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ env.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ env.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ env.TFE_WORKSPACE_ID }}/vars/${{ env.TFE_IMAGE_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ env.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ env.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ env.TFE_TWITTER_KEY }}","value":"twitter_post.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ env.TFE_WORKSPACE_ID }}/vars/${{ env.TFE_TWITTER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ env.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ env.TFE_GALLERY_VAR_ID }}","attributes":{"key":"${{ env.TFE_GALLERY_KEY }}","value":"gallery_api.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ env.TFE_WORKSPACE_ID }}/vars/${{ env.TFE_GALLERY_VAR_ID }}"
       - name: Upload Python Lambda Layers
         if: ${{ vars.UPLOAD_LAYERS == 'true' }}
         run: |
@@ -90,5 +146,5 @@ jobs:
       - name: Update Python Lambda Layer Filename TFE Variable Values
         if: ${{ vars.UPLOAD_LAYERS == 'true' }}
         run: |
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ env.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ env.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ env.TFE_WORKSPACE_ID }}/vars/${{ env.TFE_IMAGE_LAYER_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ env.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ env.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ env.TFE_WORKSPACE_ID }}/vars/${{ env.TFE_TWITTER_LAYER_VAR_ID }}"
