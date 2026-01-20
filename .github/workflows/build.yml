@@ -83,6 +83,14 @@ jobs:
           npm install
           npm test
 
+      - name: Upload Node.js Coverage Reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./Lambdas/gallery_api/coverage/lcov.info
+          flags: nodejs
+          name: Node.js Coverage
+
   security-scan:
     runs-on: ubuntu-latest
     needs: [lint_python, lint_node, test]
