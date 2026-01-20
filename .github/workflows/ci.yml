@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Lint Workflow
+        run: gh workflow run lint.yml --ref ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Test Workflow
+        run: gh workflow run test.yml --ref ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  security-scan:
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Trigger Security Scan Workflow
+        run: gh workflow run security-scan.yml --ref ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test, security-scan]
+
+    steps:
+      - name: Trigger Build Workflow
+        run: gh workflow run build.yml --ref ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [lint, test, security-scan, build]
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Trigger Deployment Workflow
+        run: gh workflow run cd.yml --ref ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ github.token }}

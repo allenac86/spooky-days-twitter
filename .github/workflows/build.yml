@@ -1,116 +1,12 @@
-name: spooky-days-twitter ci
+name: build
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  lint_python:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install Ruff
-        run: python -m pip install ruff
-
-      - name: Run Ruff Linting
-        run: ruff check Lambdas/ tests/
-
-      - name: Run Ruff Format Check
-        run: ruff format --check Lambdas/ tests/
-
-  lint_node:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-      
-      - name: Install Dependencies
-        run: |
-          cd Lambdas/gallery_api
-          npm install
-
-      - name: Run ESLint
-        run: |
-          cd Lambdas/gallery_api
-          npm run lint
-
-  test:
-    runs-on: ubuntu-latest
-    needs: [lint_python, lint_node]
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-
-      - name: Run Python Unit Tests
-        run: |
-          python -m pip install -r tests/requirements-test.txt
-          python -m pytest tests --cov=Lambdas --cov-branch --cov-report=term-missing --cov-report=xml
-
-      - name: Upload Python Coverage Reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Run Node.js Unit Tests
-        run: |
-          cd Lambdas/gallery_api
-          npm install
-          npm test
-
-      - name: Upload Node.js Coverage Reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./Lambdas/gallery_api/coverage/lcov.info
-          flags: nodejs
-          name: Node.js Coverage
-
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: [lint_python, lint_node, test]
-    permissions:
-      actions: write
-      contents: read
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Trigger Security Scan Workflow
-        run: gh workflow run security-scan.yml --ref ${{ github.ref_name }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   build:
     runs-on: ubuntu-latest
     environment: dev
-    needs: [lint_python, lint_node, test, security-scan]
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -196,20 +92,3 @@ jobs:
         run: |
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
-
-  deploy:
-    runs-on: ubuntu-latest
-    environment: dev
-    needs: [lint_python, lint_node, test, security-scan, build]
-    permissions:
-      actions: write
-      contents: read
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        
-      - name: Trigger Deployment Workflow
-        run: gh workflow run deploy.yml
-        env:
-          GH_TOKEN: ${{ github.token }}
