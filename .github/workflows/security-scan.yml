@@ -73,6 +73,8 @@ jobs:
       - name: Run Gitleaks Secret Scanning
         continue-on-error: true
         uses: gitleaks/gitleaks-action@v2.3.6
+        with:
+          scan-mode: full
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_SUMMARY: true
