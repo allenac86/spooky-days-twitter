@@ -2,7 +2,9 @@ import { getTwitterData, listAllImages } from './utils.js';
 import { Logger } from '@aws-lambda-powertools/logger';
 
 const BUCKET = process.env.IMAGE_BUCKET_NAME!;
-const logger = new Logger({ serviceName: 'gallery_api_lambda' });const handler = async (event: any, context: any) => {
+const logger = new Logger({ serviceName: 'gallery_api_lambda' });
+
+export const handler = async (event: any, context: any) => {
   const path = event.path;
 
   logger.info('Handler invoked', { path, bucket: BUCKET });
@@ -61,5 +63,3 @@ const logger = new Logger({ serviceName: 'gallery_api_lambda' });const handler 
     };
   }
 };
-
-export const lambdaHandler = handler;
