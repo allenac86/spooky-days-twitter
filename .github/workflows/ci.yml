@@ -27,19 +27,6 @@ jobs:
       - name: Set outputs
         id: set-outputs
         run: |
-          echo "::add-mask::${{ secrets.S3_BUCKET }}"
-          echo "::add-mask::${{ secrets.AWS_ACCESS_KEY_ID }}"
-          echo "::add-mask::${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          echo "::add-mask::${{ secrets.TFE_TOKEN }}"
-          echo "::add-mask::${{ secrets.TFE_IMAGE_VAR_ID }}"
-          echo "::add-mask::${{ secrets.TFE_IMAGE_KEY }}"
-          echo "::add-mask::${{ secrets.TFE_TWITTER_VAR_ID }}"
-          echo "::add-mask::${{ secrets.TFE_TWITTER_KEY }}"
-          echo "::add-mask::${{ secrets.TFE_GALLERY_VAR_ID }}"
-          echo "::add-mask::${{ secrets.TFE_GALLERY_KEY }}"
-          echo "::add-mask::${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
-          echo "::add-mask::${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
-          echo "::add-mask::${{ secrets.TFE_WORKSPACE_ID }}"
           echo "s3_bucket=${{ secrets.S3_BUCKET }}" >> $GITHUB_OUTPUT
           echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
           echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_OUTPUT
