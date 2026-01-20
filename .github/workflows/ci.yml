@@ -6,6 +6,54 @@ on:
       - main
 
 jobs:
+  get-secrets:
+    runs-on: ubuntu-latest
+    environment: dev
+    outputs:
+      s3_bucket: ${{ steps.set-outputs.outputs.s3_bucket }}
+      aws_access_key_id: ${{ steps.set-outputs.outputs.aws_access_key_id }}
+      aws_secret_access_key: ${{ steps.set-outputs.outputs.aws_secret_access_key }}
+      tfe_token: ${{ steps.set-outputs.outputs.tfe_token }}
+      tfe_image_var_id: ${{ steps.set-outputs.outputs.tfe_image_var_id }}
+      tfe_image_key: ${{ steps.set-outputs.outputs.tfe_image_key }}
+      tfe_twitter_var_id: ${{ steps.set-outputs.outputs.tfe_twitter_var_id }}
+      tfe_twitter_key: ${{ steps.set-outputs.outputs.tfe_twitter_key }}
+      tfe_gallery_var_id: ${{ steps.set-outputs.outputs.tfe_gallery_var_id }}
+      tfe_gallery_key: ${{ steps.set-outputs.outputs.tfe_gallery_key }}
+      tfe_image_layer_var_id: ${{ steps.set-outputs.outputs.tfe_image_layer_var_id }}
+      tfe_twitter_layer_var_id: ${{ steps.set-outputs.outputs.tfe_twitter_layer_var_id }}
+      tfe_workspace_id: ${{ steps.set-outputs.outputs.tfe_workspace_id }}
+    steps:
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "::add-mask::${{ secrets.S3_BUCKET }}"
+          echo "::add-mask::${{ secrets.AWS_ACCESS_KEY_ID }}"
+          echo "::add-mask::${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          echo "::add-mask::${{ secrets.TFE_TOKEN }}"
+          echo "::add-mask::${{ secrets.TFE_IMAGE_VAR_ID }}"
+          echo "::add-mask::${{ secrets.TFE_IMAGE_KEY }}"
+          echo "::add-mask::${{ secrets.TFE_TWITTER_VAR_ID }}"
+          echo "::add-mask::${{ secrets.TFE_TWITTER_KEY }}"
+          echo "::add-mask::${{ secrets.TFE_GALLERY_VAR_ID }}"
+          echo "::add-mask::${{ secrets.TFE_GALLERY_KEY }}"
+          echo "::add-mask::${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
+          echo "::add-mask::${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
+          echo "::add-mask::${{ secrets.TFE_WORKSPACE_ID }}"
+          echo "s3_bucket=${{ secrets.S3_BUCKET }}" >> $GITHUB_OUTPUT
+          echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
+          echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_OUTPUT
+          echo "tfe_token=${{ secrets.TFE_TOKEN }}" >> $GITHUB_OUTPUT
+          echo "tfe_image_var_id=${{ secrets.TFE_IMAGE_VAR_ID }}" >> $GITHUB_OUTPUT
+          echo "tfe_image_key=${{ secrets.TFE_IMAGE_KEY }}" >> $GITHUB_OUTPUT
+          echo "tfe_twitter_var_id=${{ secrets.TFE_TWITTER_VAR_ID }}" >> $GITHUB_OUTPUT
+          echo "tfe_twitter_key=${{ secrets.TFE_TWITTER_KEY }}" >> $GITHUB_OUTPUT
+          echo "tfe_gallery_var_id=${{ secrets.TFE_GALLERY_VAR_ID }}" >> $GITHUB_OUTPUT
+          echo "tfe_gallery_key=${{ secrets.TFE_GALLERY_KEY }}" >> $GITHUB_OUTPUT
+          echo "tfe_image_layer_var_id=${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}" >> $GITHUB_OUTPUT
+          echo "tfe_twitter_layer_var_id=${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}" >> $GITHUB_OUTPUT
+          echo "tfe_workspace_id=${{ secrets.TFE_WORKSPACE_ID }}" >> $GITHUB_OUTPUT
+
   lint:
     permissions:
       contents: read
@@ -26,13 +74,31 @@ jobs:
     uses: ./.github/workflows/security-scan.yml
 
   build:
+    needs: [get-secrets, lint, test, security-scan]
     permissions:
       contents: read
       actions: write
     uses: ./.github/workflows/build.yml
+    with:
+      s3_bucket: ${{ needs.get-secrets.outputs.s3_bucket }}
+      aws_access_key_id: ${{ needs.get-secrets.outputs.aws_access_key_id }}
+      aws_secret_access_key: ${{ needs.get-secrets.outputs.aws_secret_access_key }}
+      tfe_token: ${{ needs.get-secrets.outputs.tfe_token }}
+      tfe_image_var_id: ${{ needs.get-secrets.outputs.tfe_image_var_id }}
+      tfe_image_key: ${{ needs.get-secrets.outputs.tfe_image_key }}
+      tfe_twitter_var_id: ${{ needs.get-secrets.outputs.tfe_twitter_var_id }}
+      tfe_twitter_key: ${{ needs.get-secrets.outputs.tfe_twitter_key }}
+      tfe_gallery_var_id: ${{ needs.get-secrets.outputs.tfe_gallery_var_id }}
+      tfe_gallery_key: ${{ needs.get-secrets.outputs.tfe_gallery_key }}
+      tfe_image_layer_var_id: ${{ needs.get-secrets.outputs.tfe_image_layer_var_id }}
+      tfe_twitter_layer_var_id: ${{ needs.get-secrets.outputs.tfe_twitter_layer_var_id }}
+      tfe_workspace_id: ${{ needs.get-secrets.outputs.tfe_workspace_id }}
 
   deploy:
+    needs: [get-secrets, lint, test, security-scan, build]
     permissions:
       contents: read
       actions: write
     uses: ./.github/workflows/cd.yml
+    with:
+      tfe_token: ${{ needs.get-secrets.outputs.tfe_token }}
