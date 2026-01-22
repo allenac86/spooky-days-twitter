@@ -8,13 +8,18 @@ describe('Welcome component', () => {
 
     // Check for the Twitter link
     const twitterLink = screen.getByRole('link', { name: /spooky_days_gpt/i });
+
     expect(twitterLink).toBeInTheDocument();
     expect(twitterLink).toHaveAttribute('href', 'https://x.com/spooky_days_gpt');
 
     // Check for the GitHub link
     const githubLink = screen.getByRole('link', { name: /spooky-days-twitter/i });
+
     expect(githubLink).toBeInTheDocument();
-    expect(githubLink).toHaveAttribute('href', 'https://www.github.com/allenac86/spooky-days-twitter');
+    expect(githubLink).toHaveAttribute(
+      'href',
+      'https://www.github.com/allenac86/spooky-days-twitter'
+    );
 
     // Check that SVG icons are present in the links
     expect(twitterLink.querySelector('svg')).toBeInTheDocument();

@@ -24,8 +24,7 @@ repos:
         name: eslint frontend
         entry: cmd /c "cd Frontend && npm run lint"
         language: system
-        files: ^Frontend/app/
-        types: [ts]
+        files: ^Frontend/
         pass_filenames: false
 
       - id: trivy-scan
