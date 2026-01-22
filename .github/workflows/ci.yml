@@ -160,6 +160,8 @@ jobs:
             echo "Still running... checking again in 30 seconds."
             sleep 30
           done
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   build:
     runs-on: ubuntu-latest
