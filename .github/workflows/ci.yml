@@ -105,6 +105,12 @@ jobs:
           npm install
           npm test
 
+      - name: Run React Unit Tests
+        run: |
+          cd Frontend
+          npm install
+          npm test -- --run
+
       - name: Upload Node.js Coverage Reports to Codecov
         uses: codecov/codecov-action@v5
         with:
