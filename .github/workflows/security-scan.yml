@@ -91,16 +91,8 @@ jobs:
 
       - name: Run OWASP Dependency-Check
         continue-on-error: true
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'Spooky Days Twitter'
-          path: '.'
-          format: 'SARIF'
-          out: 'owasp-dependency-check-results.sarif'
-          args: >
-            --enableRetired
-            --enableExperimental
-            --nvdValidForHours 24
+        run: |
+          docker run --rm -v $(pwd):/src owasp/dependency-check:latest --scan /src --format SARIF --out /src/dependency-check-results.sarif --enableRetired --enableExperimental --nvdValidForHours 24
 
       - name: Upload OWASP Dependency-Check Results to GitHub Security
         if: always()
@@ -120,13 +112,8 @@ jobs:
 
       - name: Run Trivy Terraform Scanning
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'config'
-          scan-ref: 'Terraform/'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+        run: |
+          docker run --rm -v $(pwd):/workspace aquasecurity/trivy config --format sarif /workspace/Terraform/ > trivy-results.sarif
 
       - name: Upload Trivy Results to GitHub Security
         if: always()
@@ -137,13 +124,8 @@ jobs:
 
       - name: Run Trivy Dependency Scanning
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'fs'
-          scan-ref: 'Lambdas/gallery_api/package.json,Frontend/package.json,Lambdas/image_gen/requirements.txt,Lambdas/twitter_post/requirements.txt'
-          format: 'sarif'
-          output: 'trivy-dep-results.sarif'
-          severity: 'CRITICAL,HIGH'
+        run: |
+          docker run --rm -v $(pwd):/workspace aquasecurity/trivy fs --format sarif /workspace/Lambdas/gallery_api/package.json /workspace/Frontend/package.json /workspace/Lambdas/image_gen/requirements.txt /workspace/Lambdas/twitter_post/requirements.txt > trivy-dep-results.sarif
 
       - name: Upload Trivy Dependency Results to GitHub Security
         if: always()
