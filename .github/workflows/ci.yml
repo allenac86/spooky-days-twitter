@@ -98,6 +98,8 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: python
+          name: Python Coverage
 
       - name: Run Node.js Unit Tests
         run: |
@@ -109,7 +111,7 @@ jobs:
         run: |
           cd Frontend
           npm install
-          npm test -- --run
+          npm test -- --run --coverage
 
       - name: Upload Node.js Coverage Reports to Codecov
         uses: codecov/codecov-action@v5
@@ -118,6 +120,14 @@ jobs:
           files: ./Lambdas/gallery_api/coverage/lcov.info
           flags: nodejs
           name: Node.js Coverage
+    
+      - name: Upload React Coverage Reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./Frontend/coverage/lcov.info
+          flags: react
+          name: React Coverage
 
   security-scan:
     runs-on: ubuntu-latest

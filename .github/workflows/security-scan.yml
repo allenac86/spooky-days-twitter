@@ -54,7 +54,7 @@ jobs:
         continue-on-error: true
         run: |
           python -m pip install semgrep
-          semgrep scan --config p/ci --sarif --output semgrep-results.sarif Lambdas/gallery_api/
+          semgrep scan --config p/ci --sarif Lambdas/gallery_api/ > semgrep-node-results.sarif
 
       - name: Upload Semgrep Node Results to GitHub Security
         if: always()
@@ -66,7 +66,7 @@ jobs:
       - name: Run Semgrep SAST - React
         continue-on-error: true
         run: |
-          semgrep scan --config p/ci --sarif --output semgrep-react-results.sarif Frontend/
+          semgrep scan --config p/ci --sarif Frontend/ > semgrep-react-results.sarif
 
       - name: Upload Semgrep React Results to GitHub Security
         if: always()
