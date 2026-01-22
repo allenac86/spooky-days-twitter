@@ -34,6 +34,13 @@ A serverless application that generates images of various "National Days" with a
 - CI/CD via GitHub Actions (build → deploy pipeline)
 - Lambda Layers built using official AWS Lambda Docker images for binary compatibility
 
+**Technology**
+- **Python**
+- **Node.js**
+- **React**
+- **Terraform**
+- **GitHub Actions**
+
 Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-diagram-generator]):
 
 <img width="4297" height="1745" alt="image" src="https://github.com/user-attachments/assets/b0748c4f-33da-49f5-8749-a92640fd22e1" />
@@ -52,7 +59,7 @@ Architecture Diagram (AI generated using Eraser [https://www.eraser.io/ai/aws-di
 
 ## CI/CD Pipeline
 
-The project includes a comprehensive CI/CD pipeline with quality gates, security scanning, and automated deployments. All jobs run sequentially, with each stage depending on the successful completion of all previous stages.
+The project includes a comprehensive CI/CD pipeline with quality gates, security scanning, and automated deployments. The lint, test, and security-scan stages run in parallel. The build runs after successful execution of the lint, test, and security-scan stages. Once build is successful, packages are uploaded to AWS, and Terraform variables pointing to the new packages are updated in the Terraform Cloud Workspace, the deploy stage triggers a Terraform run to deploy the updated infrastructure and point to the latest code packages.
 
 ### Pipeline Stages
 
