@@ -39,6 +39,19 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "image_bucket_encr
   }
 }
 
+# Encrypt ui bucket with KMS
+resource "aws_s3_bucket_server_side_encryption_configuration" "ui_bucket_encryption" {
+  bucket = aws_s3_bucket.spooky_days_ui_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.app_encryption_key.id
+    }
+    bucket_key_enabled = true
+  }
+}
+
 # Block public access to lambda bucket
 resource "aws_s3_bucket_public_access_block" "lambda_bucket_public_access_block" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
@@ -59,6 +72,16 @@ resource "aws_s3_bucket_public_access_block" "image_bucket_public_access_block" 
   restrict_public_buckets = true
 }
 
+# Block public access to ui bucket
+resource "aws_s3_bucket_public_access_block" "ui_bucket_public_access_block" {
+  bucket = aws_s3_bucket.spooky_days_ui_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Enable versioning on lambda bucket
 resource "aws_s3_bucket_versioning" "lambda_bucket_versioning" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
@@ -71,6 +94,15 @@ resource "aws_s3_bucket_versioning" "lambda_bucket_versioning" {
 # Enable versioning on image bucket
 resource "aws_s3_bucket_versioning" "image_bucket_versioning" {
   bucket = aws_s3_bucket.spooky_days_image_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Enable versioning on ui bucket
+resource "aws_s3_bucket_versioning" "ui_bucket_versioning" {
+  bucket = aws_s3_bucket.spooky_days_ui_bucket.id
 
   versioning_configuration {
     status = "Enabled"
@@ -129,6 +161,29 @@ resource "aws_s3_bucket_lifecycle_configuration" "image_bucket_lifecycle" {
     transition {
       days          = var.s3_image_glacier_transition_days
       storage_class = var.s3_image_transition_storage_class
+    }
+  }
+}
+
+# Lifecycle policy for UI bucket
+resource "aws_s3_bucket_lifecycle_configuration" "ui_bucket_lifecycle" {
+  bucket = aws_s3_bucket.spooky_days_ui_bucket.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = var.s3_ui_lifecycle_noncurrent_versions_enabled ? "Enabled" : "Disabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.s3_ui_noncurrent_version_expiration_days
+    }
+  }
+
+  rule {
+    id     = "abort-incomplete-multipart-uploads"
+    status = var.s3_ui_lifecycle_multipart_upload_cleanup_enabled ? "Enabled" : "Disabled"
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = var.s3_ui_incomplete_multipart_upload_days
     }
   }
 }

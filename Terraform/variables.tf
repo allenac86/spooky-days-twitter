@@ -110,13 +110,13 @@ variable "dynamodb_api_table_name" {
 variable "s3_lambda_noncurrent_version_expiration_days" {
   description = "Number of days after which noncurrent object versions are deleted in lambda bucket"
   type        = number
-  default     = 14
+  default     = 7
 }
 
 variable "s3_lambda_incomplete_multipart_upload_days" {
   description = "Number of days after which incomplete multipart uploads are aborted in lambda bucket"
   type        = number
-  default     = 7
+  default     = 5
 }
 
 variable "s3_lambda_lifecycle_noncurrent_versions_enabled" {
@@ -135,13 +135,13 @@ variable "s3_lambda_lifecycle_multipart_upload_cleanup_enabled" {
 variable "s3_image_noncurrent_version_expiration_days" {
   description = "Number of days after which noncurrent object versions are deleted in image bucket"
   type        = number
-  default     = 14
+  default     = 7
 }
 
 variable "s3_image_incomplete_multipart_upload_days" {
   description = "Number of days after which incomplete multipart uploads are aborted in image bucket"
   type        = number
-  default     = 7
+  default     = 5
 }
 
 variable "s3_image_glacier_transition_days" {
@@ -179,4 +179,27 @@ variable "ui_zip_filename" {
   type        = string
   default     = null
 }
-       
+
+variable "s3_ui_lifecycle_noncurrent_versions_enabled" {
+  description = "Enable lifecycle rule for deleting noncurrent versions in UI bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_ui_noncurrent_version_expiration_days" {
+  description = "Number of days after which noncurrent object versions are deleted in UI bucket"
+  type        = number
+  default     = 7
+}
+
+variable "s3_ui_lifecycle_multipart_upload_cleanup_enabled" {
+  description = "Enable lifecycle rule for aborting incomplete multipart uploads in UI bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_ui_incomplete_multipart_upload_days" {
+  description = "Number of days after which incomplete multipart uploads are aborted in UI bucket"
+  type        = number
+  default     = 5
+}
