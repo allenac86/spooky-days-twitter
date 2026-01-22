@@ -15,6 +15,11 @@ data "aws_s3_object" "spooky_days_object_gallery" {
   key    = var.gallery_lambda_zip_filename
 }
 
+data "aws_s3_object" "spooky_days_ui_object" {
+  bucket = aws_s3_bucket.spooky_days_ui_bucket.bucket
+  key    = var.ui_zip_filename
+}
+
 data "aws_lambda_layer_version" "image_lambda_layer" {
   layer_name = var.image_lambda_layer_name
 }

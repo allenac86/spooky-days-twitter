@@ -203,6 +203,17 @@ jobs:
           echo "Contents of gallery_api.zip:"
           unzip -l gallery_api.zip | head -20
 
+      - name: Package Frontend React UI
+        run: |
+          cd Frontend
+          npm install
+          npm run build
+          zip -r ../ui.zip build/
+          cd ..
+          ls -la
+          echo "Contents of ui.zip:"
+          unzip -l ui.zip | head -20
+
       - name: Package Python Lambda Layers
         run: |
           docker run --rm --entrypoint /bin/bash -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
@@ -226,12 +237,15 @@ jobs:
           aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
           aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
           aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
+          aws s3 cp ui.zip ${{ secrets.UI_BUCKET }}/ui.zip
           
-      - name: Update Lambda Filename TFE Variable Values
+      - name: Update TFE Variables
         run: |
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_KEY }}","value":"twitter_post.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_GALLERY_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_GALLERY_KEY }}","value":"gallery_api.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_GALLERY_VAR_ID }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_UI_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_UI_KEY }}","value":"ui.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_UI_VAR_ID }}"
+
       - name: Upload Python Lambda Layers
         if: ${{ vars.UPLOAD_LAYERS == 'true' }}
         run: |

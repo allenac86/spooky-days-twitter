@@ -173,3 +173,10 @@ variable "s3_image_transition_storage_class" {
   type        = string
   default     = "GLACIER_IR"
 }
+
+variable "ui_zip_filename" {
+  description = "Filename of the UI zip file."
+  type        = string
+  default     = null
+}
+       

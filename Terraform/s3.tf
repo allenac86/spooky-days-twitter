@@ -8,6 +8,11 @@ resource "aws_s3_bucket" "spooky_days_image_bucket" {
   bucket = "${var.app_name}-image-bucket-${random_string.random.result}"
 }
 
+#S3 bucket for storing UI code and assets
+resource "aws_s3_bucket" "spooky_days_ui_bucket" {
+  bucket = "${var.app_name}-ui-bucket-${random_string.random.result}"
+}
+
 # Encrypt lambda bucket with KMS
 resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_bucket_encryption" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
