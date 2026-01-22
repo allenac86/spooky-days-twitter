@@ -28,6 +28,13 @@ repos:
         types: [ts]
         pass_filenames: false
 
+      - id: trivy-scan
+        name: trivy security scan
+        entry: trivy fs --format json --severity HIGH,CRITICAL --output NUL .
+        language: system
+        files: .
+        pass_filenames: false
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.1
     hooks:

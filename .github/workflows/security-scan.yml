@@ -56,12 +56,24 @@ jobs:
           python -m pip install semgrep
           semgrep scan --config p/ci --sarif --output semgrep-results.sarif Lambdas/gallery_api/
 
-      - name: Upload Semgrep Results to GitHub Security
+      - name: Upload Semgrep Node Results to GitHub Security
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: semgrep-results.sarif
+          sarif_file: semgrep-node-results.sarif
           category: semgrep-nodejs
+
+      - name: Run Semgrep SAST - React
+        continue-on-error: true
+        run: |
+          semgrep scan --config p/ci --sarif --output semgrep-react-results.sarif Frontend/
+
+      - name: Upload Semgrep React Results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-react-results.sarif
+          category: semgrep-react
 
       - name: Run npm audit Dependency Scanning - Node.js
         continue-on-error: true
@@ -69,6 +81,33 @@ jobs:
           cd Lambdas/gallery_api
           npm audit --audit-level=moderate --json > npm-audit-results.json || true
           cat npm-audit-results.json
+
+      - name: Run npm audit Dependency Scanning - React
+        continue-on-error: true
+        run: |
+          cd Frontend
+          npm audit --audit-level=moderate --json > npm-audit-react-results.json || true
+          cat npm-audit-react-results.json
+
+      - name: Run OWASP Dependency-Check
+        continue-on-error: true
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'Spooky Days Twitter'
+          path: '.'
+          format: 'SARIF'
+          out: 'owasp-dependency-check-results.sarif'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --nvdValidForHours 24
+
+      - name: Upload OWASP Dependency-Check Results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: dependency-check-results.sarif
+          category: dependency-check
 
       - name: Run Gitleaks Secret Scanning
         continue-on-error: true
@@ -95,3 +134,20 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
           category: trivy-terraform
+
+      - name: Run Trivy Dependency Scanning
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'Lambdas/gallery_api/package.json,Frontend/package.json,Lambdas/image_gen/requirements.txt,Lambdas/twitter_post/requirements.txt'
+          format: 'sarif'
+          output: 'trivy-dep-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy Dependency Results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-dep-results.sarif
+          category: trivy-dependencies
