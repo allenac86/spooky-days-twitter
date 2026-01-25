@@ -52,7 +52,7 @@ resource "aws_kms_key" "app_encryption_key" {
           AWS = aws_cloudfront_origin_access_identity.ui_oai.iam_arn
         }
         Action   = "kms:Decrypt"
-        Resource = aws_kms_key.app_encryption_key.arn
+        Resource = "*"
       }
     ]
   })
