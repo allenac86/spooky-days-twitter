@@ -39,19 +39,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "image_bucket_encr
   }
 }
 
-# Encrypt ui bucket with KMS
-resource "aws_s3_bucket_server_side_encryption_configuration" "ui_bucket_encryption" {
-  bucket = aws_s3_bucket.spooky_days_ui_bucket.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.app_encryption_key.id
-    }
-    bucket_key_enabled = true
-  }
-}
-
 # Block public access to lambda bucket
 resource "aws_s3_bucket_public_access_block" "lambda_bucket_public_access_block" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
