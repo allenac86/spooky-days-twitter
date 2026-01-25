@@ -149,7 +149,7 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
   }
 
   # WAF association
-  web_acl_id = aws_wafv2_web_acl.cloudfront_waf.id
+  web_acl_id = aws_wafv2_web_acl.cloudfront_waf.arn
 
   # Custom error pages (SPA fallback)
   custom_error_response {

@@ -44,6 +44,15 @@ resource "aws_kms_key" "app_encryption_key" {
           "kms:GenerateDataKey"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudFront OAI to decrypt"
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_cloudfront_origin_access_identity.ui_oai.iam_arn
+        }
+        Action   = "kms:Decrypt"
+        Resource = aws_kms_key.app_encryption_key.arn
       }
     ]
   })
