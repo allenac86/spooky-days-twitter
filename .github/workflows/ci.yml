@@ -208,11 +208,8 @@ jobs:
           cd Frontend
           npm install
           npm run build
-          zip -r ../ui.zip build/
           cd ..
-          ls -la
-          echo "Contents of ui.zip:"
-          unzip -l ui.zip | head -20
+          aws s3 sync Frontend/build/ ${{ secrets.UI_BUCKET }}/ --delete
 
       - name: Package Python Lambda Layers
         run: |
@@ -237,7 +234,6 @@ jobs:
           aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
           aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
           aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
-          aws s3 cp ui.zip ${{ secrets.UI_BUCKET }}/ui.zip
           
       - name: Update TFE Variables
         run: |

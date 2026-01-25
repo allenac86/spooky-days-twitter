@@ -174,12 +174,6 @@ variable "s3_image_transition_storage_class" {
   default     = "GLACIER_IR"
 }
 
-variable "ui_zip_filename" {
-  description = "Filename of the UI zip file."
-  type        = string
-  default     = null
-}
-
 variable "s3_ui_lifecycle_noncurrent_versions_enabled" {
   description = "Enable lifecycle rule for deleting noncurrent versions in UI bucket"
   type        = bool
