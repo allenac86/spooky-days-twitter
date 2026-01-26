@@ -12,15 +12,18 @@ A serverless application that generates images of various "National Days" with a
 ## Architecture
 
 **AWS Services Used:**
-- **Lambda** - Serverless compute for image generation and Twitter posting
-- **Lambda Layers** - Shared dependencies (OpenAI SDK, Tweepy, boto3)
-- **S3** - Storage for Lambda code packages, generated images, and configuration (KMS-encrypted with public access blocked)
-- **DynamoDB** - Job tracking and post history
+- **ACM** - SSL/TLS certificates for secure CloudFront connections
+- **CloudFront** - Content delivery network for static site hosting
 - **EventBridge** - Cron-based scheduling (Mon-Fri at 1:00 PM UTC / 8:00 AM EST)
-- **Secrets Manager** - Secure storage for OpenAI and Twitter API credentials (KMS-encrypted)
-- **KMS** - Encryption for Secrets Manager and S3 buckets at rest with automatic key rotation
 - **CloudWatch Logs** - Lambda function logging and monitoring
+- **DynamoDB** - Job tracking and post history
 - **IAM** - Role-based access control and permissions
+- **KMS** - Encryption for Secrets Manager and S3 buckets at rest with automatic key rotation
+- **Lambda** - Serverless compute for image generation, Twitter posting, and an API for the UI
+- **Lambda Layers** - Dependencies for Python Lambdas (OpenAI SDK, Tweepy, boto3)
+- **Route 53** - DNS management for custom domain
+- **S3** - Storage for Lambda code packages, generated images, configuration, and static site hosting (KMS-encrypted with public access blocked)
+- **Secrets Manager** - Secure storage for OpenAI and Twitter API credentials (KMS-encrypted)
 
 **Application Flow:**
 
