@@ -6,6 +6,7 @@ locals {
   image_lambda_function_name         = "${var.app_name}-image-lambda-function-${random_string.random.result}"
   twitter_lambda_execution_role_name = "${var.app_name}-twitter-lambda-execution-role-${random_string.random.result}"
   twitter_lambda_function_name       = "${var.app_name}-twitter-lambda-function-${random_string.random.result}"
+  domain_aliases                     = jsondecode(var.domain_aliases)
 }
 
 # Random String for S3 Bucket Name

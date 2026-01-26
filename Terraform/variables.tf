@@ -197,3 +197,15 @@ variable "s3_ui_incomplete_multipart_upload_days" {
   type        = number
   default     = 5
 }
+
+variable "hosted_zone" {
+  description = "Route 53 Hosted Zone Name for the domain (same as domain name)"
+  type        = string
+  default     = null
+}
+
+variable "domain_aliases" {
+  description = "Aliases for the custom spooky-days domain (JSON string from Terraform Cloud)"
+  type        = string
+  default     = null
+}

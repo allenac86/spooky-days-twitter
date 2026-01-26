@@ -22,3 +22,7 @@ data "aws_lambda_layer_version" "image_lambda_layer" {
 data "aws_lambda_layer_version" "twitter_lambda_layer" {
   layer_name = var.twitter_lambda_layer_name
 }
+
+data "aws_route53_zone" "spooky_days" {
+  name = var.hosted_zone
+}
