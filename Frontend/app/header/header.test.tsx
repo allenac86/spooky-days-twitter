@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import { Welcome } from './welcome';
+import { Header } from './header';
 
-describe('Welcome component', () => {
+describe('Header component', () => {
   test('renders links for spooky_days_gpt and spooky-days-twitter', () => {
-    render(<Welcome />);
+    render(<Header />);
 
     // Check for the Twitter link
     const twitterLink = screen.getByRole('link', { name: /spooky_days_gpt/i });
