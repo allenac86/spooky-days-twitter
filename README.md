@@ -13,7 +13,7 @@ A serverless application that generates images of various "National Days" with a
 
 **AWS Services Used:**
 - **ACM** - SSL/TLS certificates for secure CloudFront connections
-- **CloudFront** - Content delivery network for static site hosting
+- **CloudFront** - Content delivery network for static site hosting with access logging enabled to S3
 - **EventBridge** - Cron-based scheduling (Mon-Fri at 1:00 PM UTC / 8:00 AM EST)
 - **CloudWatch Logs** - Lambda function logging and monitoring
 - **DynamoDB** - Job tracking and post history

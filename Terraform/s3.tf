@@ -13,6 +13,11 @@ resource "aws_s3_bucket" "spooky_days_ui_bucket" {
   bucket = "${var.app_name}-ui-bucket-${random_string.random.result}"
 }
 
+# S3 bucket for CloudFront access logs
+resource "aws_s3_bucket" "spooky_days_logs_bucket" {
+  bucket = "${var.app_name}-logs-bucket-${random_string.random.result}"
+}
+
 # Encrypt lambda bucket with KMS
 resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_bucket_encryption" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
@@ -50,6 +55,18 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "ui_bucket_encrypt
     bucket_key_enabled = false
   }
 }
+
+# Encrypt logs bucket with SSE-S3 (not KMS)
+resource "aws_s3_bucket_server_side_encryption_configuration" "logs_bucket_encryption" {
+  bucket = aws_s3_bucket.spooky_days_logs_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+    bucket_key_enabled = false
+  }
+}
 resource "aws_s3_bucket_public_access_block" "lambda_bucket_public_access_block" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
 
@@ -77,6 +94,35 @@ resource "aws_s3_bucket_public_access_block" "ui_bucket_public_access_block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+# Block public access to logs bucket
+resource "aws_s3_bucket_public_access_block" "logs_bucket_public_access_block" {
+  bucket = aws_s3_bucket.spooky_days_logs_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Allow CloudFront to write access logs to the bucket
+resource "aws_s3_bucket_policy" "logs_bucket_policy" {
+  bucket = aws_s3_bucket.spooky_days_logs_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "delivery.logs.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.spooky_days_logs_bucket.arn}/cloudfront/*"
+      }
+    ]
+  })
 }
 
 # Enable versioning on lambda bucket

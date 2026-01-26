@@ -181,4 +181,11 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
     response_code      = 200
     response_page_path = "/index.html"
   }
+
+  # Enable access logging
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.spooky_days_logs_bucket.bucket_domain_name
+    prefix          = "cloudfront/"
+  }
 }
