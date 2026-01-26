@@ -30,7 +30,7 @@ export function Header() {
               d={twitterPath}
             />
           </svg>
-          spooky_days_gpt
+          Twitter
         </a>
         <a
           href="https://www.github.com/allenac86/spooky-days-twitter"
@@ -51,7 +51,7 @@ export function Header() {
               d={githubPath}
             />
           </svg>
-          spooky-days-twitter
+          GitHub
         </a>
       </nav>
     </header>

@@ -18,6 +18,15 @@ resource "aws_s3_bucket" "spooky_days_logs_bucket" {
   bucket = "${var.app_name}-logs-bucket-${random_string.random.result}"
 }
 
+# Enable ACLs for CloudFront logging
+resource "aws_s3_bucket_ownership_controls" "logs_bucket_ownership" {
+  bucket = aws_s3_bucket.spooky_days_logs_bucket.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 # Encrypt lambda bucket with KMS
 resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_bucket_encryption" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
@@ -100,9 +109,9 @@ resource "aws_s3_bucket_public_access_block" "ui_bucket_public_access_block" {
 resource "aws_s3_bucket_public_access_block" "logs_bucket_public_access_block" {
   bucket = aws_s3_bucket.spooky_days_logs_bucket.id
 
-  block_public_acls       = false  # Allow ACLs for CloudFront logging
+  block_public_acls       = false # Allow ACLs for CloudFront logging
   block_public_policy     = true
-  ignore_public_acls      = false  # Allow CloudFront to set ACLs
+  ignore_public_acls      = false # Allow CloudFront to set ACLs
   restrict_public_buckets = true
 }
 
