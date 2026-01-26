@@ -39,7 +39,17 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "image_bucket_encr
   }
 }
 
-# Block public access to lambda bucket
+# Encrypt ui bucket with SSE-S3 (not KMS)
+resource "aws_s3_bucket_server_side_encryption_configuration" "ui_bucket_encryption" {
+  bucket = aws_s3_bucket.spooky_days_ui_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+    bucket_key_enabled = false
+  }
+}
 resource "aws_s3_bucket_public_access_block" "lambda_bucket_public_access_block" {
   bucket = aws_s3_bucket.spooky_days_lambda_bucket.id
 
