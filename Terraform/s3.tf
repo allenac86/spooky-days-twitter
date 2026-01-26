@@ -100,7 +100,7 @@ resource "aws_s3_bucket_public_access_block" "ui_bucket_public_access_block" {
 resource "aws_s3_bucket_public_access_block" "logs_bucket_public_access_block" {
   bucket = aws_s3_bucket.spooky_days_logs_bucket.id
 
-  block_public_acls       = true
+  block_public_acls       = false  # Allow ACLs for CloudFront logging
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
