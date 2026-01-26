@@ -77,7 +77,12 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
     ssl_support_method  = "sni-only"
   }
 
-  depends_on = [aws_route53_record.spooky_days_cert_validation]
+  depends_on = [
+    aws_route53_record.spooky_days_cert_validation,
+    aws_s3_bucket_ownership_controls.logs_bucket_ownership,
+    aws_s3_bucket_public_access_block.logs_bucket_public_access_block,
+    aws_s3_bucket_policy.logs_bucket_policy,
+  ]
 
   # Origins
   origin {

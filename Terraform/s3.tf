@@ -127,7 +127,10 @@ resource "aws_s3_bucket_policy" "logs_bucket_policy" {
         Principal = {
           Service = "delivery.logs.amazonaws.com"
         }
-        Action   = "s3:PutObject"
+        Action = [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ]
         Resource = "${aws_s3_bucket.spooky_days_logs_bucket.arn}/cloudfront/*"
       }
     ]
