@@ -125,7 +125,12 @@ def test_upload_removes_tmp_prefix(mock_env_vars, mock_config):
             upload_image_to_s3('/tmp/test.jpg', 'bucket')
 
             mock_s3.upload_file.assert_called_once_with(
-                '/tmp/test.jpg', 'bucket', 'images/test.jpg'
+                '/tmp/test.jpg',
+                'bucket',
+                'images/test.jpg',
+                ExtraArgs={
+                    'CacheControl': 'no-store, no-cache, must-revalidate, max-age=0'
+                },
             )
 
 
