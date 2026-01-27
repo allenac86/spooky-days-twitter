@@ -166,7 +166,7 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
         forward = "all"
       }
 
-      headers = ["Authorization", var.cloudfront_api_header_name]
+      headers = ["Authorization"]
     }
 
     viewer_protocol_policy = "redirect-to-https"
