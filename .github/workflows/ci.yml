@@ -6,69 +6,56 @@ on:
       - main
 
 jobs:
-  lint_python:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        id: checkout-code
+        with:
+          fetch-depth: 5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            image_gen:
+              - 'Lambdas/image_gen/**'
+            twitter_post:
+              - 'Lambdas/twitter_post/**'
+            gallery_api:
+              - 'Lambdas/gallery_api/**'
+            frontend:
+              - 'Frontend/**'
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Ruff
-        run: python -m pip install ruff
-
-      - name: Run Ruff Linting
-        run: ruff check Lambdas/ tests/
-
-      - name: Run Ruff Format Check
-        run: ruff format --check Lambdas/ tests/
-
-  lint_node:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
+      - name: Python Lint
+        if: ${{ steps.filter.outputs.image_gen == 'true' || steps.filter.outputs.twitter_post == 'true' }}
+        run: |
+          python -m pip install ruff
+          ruff check Lambdas/ tests/
+          ruff format --check Lambdas/ tests/
+          
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
-      
-      - name: Install Dependencies
+
+      - name: Node Lint
+        if: ${{ steps.filter.outputs.gallery_api == 'true' }}
         run: |
           cd Lambdas/gallery_api
           npm install
-
-      - name: Run ESLint
-        run: |
-          cd Lambdas/gallery_api
           npm run lint
 
-  lint_react:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-      
-      - name: Install Dependencies
+      - name: React Lint
+        if: ${{ steps.filter.outputs.frontend == 'true' }}
         run: |
           cd Frontend
           npm install
-
-      - name: Run ESLint
-        run: |
-          cd Frontend
           npm run lint
 
   test:
@@ -166,7 +153,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: dev
-    needs: [lint_python, lint_node, lint_react, test, security-scan]
+    needs: [lint, test, security-scan]
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -175,24 +162,45 @@ jobs:
       AWS_DEFAULT_OUTPUT: json
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        id: checkout-code
+        with:
+          fetch-depth: 5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            image_gen:
+              - 'Lambdas/image_gen/**'
+            twitter_post:
+              - 'Lambdas/twitter_post/**'
+            gallery_api:
+              - 'Lambdas/gallery_api/**'
+            frontend:
+              - 'Frontend/**'
 
-      - name: Package Python Lambda Functions
+      - name: Package Image Gen Lambda
+        if: ${{ steps.filter.outputs.image_gen == 'true' }}
         run: |
           cd Lambdas/image_gen
           zip -r ../../image_gen.zip main.py
           cd ../..
+          ls -la
+          echo "Contents of image_gen.zip:"
+          unzip -l image_gen.zip
+
+      - name: Package Twitter Post Lambda
+        if: ${{ steps.filter.outputs.twitter_post == 'true' }}
+        run: |
           cd Lambdas/twitter_post
           zip -r ../../twitter_post.zip main.py
           cd ../..
           ls -la
-          echo "Contents of image_gen.zip:"
-          unzip -l image_gen.zip
           echo "Contents of twitter_post.zip:"
           unzip -l twitter_post.zip
 
-      - name: Package Node Lambda Function
+      - name: Package Gallery Lambda
+        if: ${{ steps.filter.outputs.gallery_api == 'true' }}
         run: |
           cd Lambdas/gallery_api
           npm install
@@ -201,9 +209,10 @@ jobs:
           cd ../..
           ls -la
           echo "Contents of gallery_api.zip:"
-          unzip -l gallery_api.zip | head -20
+          unzip -l gallery_api.zip
 
       - name: Package Frontend React UI
+        if: ${{ steps.filter.outputs.frontend == 'true' }}
         run: |
           cd Frontend
           npm install
@@ -212,6 +221,7 @@ jobs:
           aws s3 sync Frontend/build/ ${{ secrets.UI_BUCKET }}/ --delete
 
       - name: Package Python Lambda Layers
+        if: ${{ steps.filter.outputs.image_gen == 'true' || steps.filter.outputs.twitter_post == 'true' }}
         run: |
           docker run --rm --entrypoint /bin/bash -v $(pwd):/workspace public.ecr.aws/lambda/python:3.10 \
             -c "pip install -r /workspace/Lambdas/image_gen/requirements.txt -t /workspace/layer_image_gen/python && chown -R $(id -u):$(id -g) /workspace/layer_image_gen"
@@ -229,21 +239,26 @@ jobs:
           echo "Contents of twitter_post_layer.zip:"
           unzip -l twitter_post_layer.zip | head -20
 
-      - name: Upload Zip Files to S3
+      - name: Upload Image Gen Lambda to S3
+        if: ${{ steps.filter.outputs.image_gen == 'true' }}
         run: |
           aws s3 cp image_gen.zip ${{ secrets.S3_BUCKET }}/image_gen.zip
-          aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
-          aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
-          
-      - name: Update TFE Variables
-        run: |
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_IMAGE_KEY }}","value":"image_gen.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_VAR_ID }}"
+
+      - name: Upload Twitter Post Lambda to S3
+        if: ${{ steps.filter.outputs.twitter_post == 'true' }}
+        run: |
+          aws s3 cp twitter_post.zip ${{ secrets.S3_BUCKET }}/twitter_post.zip
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_TWITTER_KEY }}","value":"twitter_post.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_VAR_ID }}"
+
+      - name: Upload Gallery API Lambda to S3
+        if: ${{ steps.filter.outputs.gallery_api == 'true' }}
+        run: |
+          aws s3 cp gallery_api.zip ${{ secrets.S3_BUCKET }}/gallery_api.zip
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_GALLERY_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_GALLERY_KEY }}","value":"gallery_api.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_GALLERY_VAR_ID }}"
-          curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_UI_VAR_ID }}","attributes":{"key":"${{ secrets.TFE_UI_KEY }}","value":"ui.zip","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_UI_VAR_ID }}"
 
       - name: Upload Python Lambda Layers
-        if: ${{ vars.UPLOAD_LAYERS == 'true' }}
+        if: ${{ vars.UPLOAD_LAYERS == 'true' && (steps.filter.outputs.image_gen == 'true' || steps.filter.outputs.twitter_post == 'true') }}
         run: |
           aws lambda publish-layer-version \
             --layer-name image_gen_layer \
@@ -257,32 +272,40 @@ jobs:
             --compatible-runtimes python3.10 \
             --description "Dependencies for twitter post lambda"
 
-      - name: Update Python Lambda Layer Filename TFE Variable Values
-        if: ${{ vars.UPLOAD_LAYERS == 'true' }}
-        run: |
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}","attributes":{"value":"image_gen_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_IMAGE_LAYER_VAR_ID }}"
           curl -s --header "Authorization: Bearer ${{ secrets.TFE_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"id":"${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}","attributes":{"value":"twitter_post_layer","category":"terraform","hcl":false,"sensitive":false},"type":"vars"}}' "https://app.terraform.io/api/v2/workspaces/${{ secrets.TFE_WORKSPACE_ID }}/vars/${{ secrets.TFE_TWITTER_LAYER_VAR_ID }}"
 
   deploy:
     runs-on: ubuntu-latest
     environment: dev
-    needs: [lint_python, lint_node, lint_react, test, security-scan, build]
+    needs: [build]
     permissions:
       actions: write
       contents: read
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        id: checkout-code
+        with:
+          fetch-depth: 5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            lambdas:
+              - 'Lambdas/**'
+            frontend:
+              - 'Frontend/**'
+            terraform:
+              - 'Terraform/**'
         
-      - name: Trigger Deployment Workflow
-        run: gh workflow run cd.yml --ref ${{ github.ref_name }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        
-      - name: Wait for Deployment Completion
+      - name: Trigger Terraform Deployment
+        if: ${{ steps.filter.outputs.lambdas == 'true' || steps.filter.outputs.frontend == 'true' || steps.filter.outputs.terraform == 'true' }}
         run: |
+          gh workflow run cd.yml --ref ${{ github.ref_name }}
+          
           echo "Waiting for cd.yml to complete..."
+          
           while true; do
             STATUS=$(gh run list --workflow cd.yml --json status --jq '.[0].status')
             if [ "$STATUS" = "completed" ]; then
