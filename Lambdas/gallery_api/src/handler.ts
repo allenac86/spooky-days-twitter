@@ -46,7 +46,10 @@ export const handler = async (event: any, context: any) => {
   try {
     if (path === '/api/get-image-data') {
       const images = await listAllImages(BUCKET);
-      // Generate presigned URLs (900s TTL)
+
+      logger.info(`Retrieved ${images.length} images from S3`);
+      logger.info('Generating presigned URLs for images');
+
       const imagesWithUrls = await Promise.all(images.map(async (img) => ({
         ...img,
         url: await getPresignedUrl(BUCKET, img.key, 900),

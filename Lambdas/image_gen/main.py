@@ -168,6 +168,8 @@ def handler(event, context):
             with open(filename, 'wb') as f:
                 f.write(b64decode(image_dict['image']))
 
+            logger.info('Image written to temporary file')
+
             upload_image_to_s3(filename, bucket_name)
             insert_dynamodb_record(filename.replace('/tmp/', ''), 'uploaded')
 

@@ -60,7 +60,6 @@ export async function getPresignedUrl(
 ): Promise<string> {
   const command = new GetObjectCommand({ Bucket: bucket, Key: key });
 
-  // Do not log the URL
   return getSignedUrl(s3, command, { expiresIn: expiresSeconds });
 }
 
