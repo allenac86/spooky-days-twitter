@@ -110,7 +110,16 @@ def upload_image_to_s3(filename, bucket):
     try:
         file_to_upload = filename.replace('/tmp/', '')
         s3_key = f'images/{file_to_upload}'
-        s3_client.upload_file(filename, bucket, s3_key)
+        # Prevent caching of image responses by setting Cache-Control
+        s3_client.upload_file(
+            filename,
+            bucket,
+            s3_key,
+            ExtraArgs={
+                'CacheControl': 'no-store, no-cache, must-revalidate, max-age=0'
+            },
+        )
+
         logger.info('Image uploaded to S3', s3_key=s3_key)
     except Exception as e:
         logger.error('S3 upload failed', filename=filename, error=str(e))

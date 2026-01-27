@@ -1,5 +1,9 @@
-import path from 'node:path';
-import { getTwitterData, listAllImages, validateEnv } from './utils.js';
+import {
+  getTwitterData,
+  listAllImages,
+  validateEnv,
+  getPresignedUrl
+} from './utils.js';
 import { Logger } from '@aws-lambda-powertools/logger';
 
 const BUCKET: string = process.env.IMAGE_BUCKET_NAME!;
@@ -42,12 +46,19 @@ export const handler = async (event: any, context: any) => {
   try {
     if (path === '/api/get-image-data') {
       const images = await listAllImages(BUCKET);
+      // Generate presigned URLs (900s TTL)
+      const imagesWithUrls = await Promise.all(images.map(async (img) => ({
+        ...img,
+        url: await getPresignedUrl(BUCKET, img.key, 900),
+      })));
 
-      logger.info('Images retrieved successfully', { imageCount: images.length });
+      logger.info('Images retrieved successfully', {
+        imageCount: imagesWithUrls.length
+      });
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ images }),
+        body: JSON.stringify({ images: imagesWithUrls }),
       };
     } else if (path === '/api/get-twitter-data') {
       const twitterData = await getTwitterData();

@@ -1,11 +1,16 @@
-import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import type { ImageMetadata } from './types.js';
-import { Logger } from '@aws-lambda-powertools/logger';
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand
+} from '@aws-sdk/client-s3';
 import {
   SecretsManagerClient,
   GetSecretValueCommand
 } from '@aws-sdk/client-secrets-manager';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Logger } from '@aws-lambda-powertools/logger';
 import { TwitterApi } from 'twitter-api-v2';
+import type { ImageMetadata } from './types.js';
 
 const logger = new Logger({ serviceName: 'gallery_api_lambda' });
 const s3 = new S3Client({});
@@ -46,6 +51,17 @@ export async function listAllImages(bucket: string): Promise<ImageMetadata[]> {
 
     throw err;
   }
+}
+
+export async function getPresignedUrl(
+  bucket: string,
+  key: string,
+  expiresSeconds = 900
+): Promise<string> {
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+
+  // Do not log the URL
+  return getSignedUrl(s3, command, { expiresIn: expiresSeconds });
 }
 
 async function getTwitterCredentials(): Promise<{
