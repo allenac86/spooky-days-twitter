@@ -28,6 +28,7 @@ jobs:
               - 'Frontend/**'
 
       - name: Set up Python
+        if: ${{ steps.filter.outputs.image_gen == 'true' || steps.filter.outputs.twitter_post == 'true' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -40,6 +41,7 @@ jobs:
           ruff format --check Lambdas/ tests/
           
       - name: Set up Node.js
+        if: ${{ steps.filter.outputs.gallery_api == 'true' || steps.filter.outputs.frontend == 'true' }}
         uses: actions/setup-node@v3
         with:
           node-version: '22'
