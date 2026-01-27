@@ -82,6 +82,7 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
     aws_s3_bucket_ownership_controls.logs_bucket_ownership,
     aws_s3_bucket_public_access_block.logs_bucket_public_access_block,
     aws_s3_bucket_policy.logs_bucket_policy,
+    aws_apigatewayv2_api.gallery_api,
   ]
 
   # Origins
@@ -94,18 +95,22 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
     }
   }
 
-  # Placeholder for API Gateway origin (to be added after apigateway.tf implementation)
-  # origin {
-  #   domain_name = "${aws_apigatewayv2_api.gallery_api.id}.execute-api.${var.aws_region}.amazonaws.com"
-  #   origin_id   = "API-Gateway"
-  #
-  #   custom_origin_config {
-  #     http_port              = 80
-  #     https_port             = 443
-  #     origin_protocol_policy = "https-only"
-  #     origin_ssl_protocols   = ["TLSv1.2"]
-  #   }
-  # }
+  origin {
+    domain_name = "${aws_apigatewayv2_api.gallery_api.id}.execute-api.${var.aws_region}.amazonaws.com"
+    origin_id   = "API-Gateway"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+
+    custom_header {
+      name  = var.cloudfront_api_header_name
+      value = var.cloudfront_api_header_value
+    }
+  }
 
   # Default behavior (UI)
   default_cache_behavior {
@@ -149,25 +154,26 @@ resource "aws_cloudfront_distribution" "spooky_days_distribution" {
   }
 
   # Behavior for API routes (to be uncommented after API Gateway)
-  # ordered_cache_behavior {
-  #   path_pattern     = "/api/*"
-  #   allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-  #   cached_methods   = ["GET", "HEAD"]
-  #   target_origin_id = "API-Gateway"
-  #
-  #   forwarded_values {
-  #     query_string = true
-  #     cookies {
-  #       forward = "all"
-  #     }
-  #     headers = ["Authorization"]
-  #   }
-  #
-  #   viewer_protocol_policy = "redirect-to-https"
-  #   min_ttl                = 0
-  #   default_ttl            = 0
-  #   max_ttl                = 0
-  # }
+  ordered_cache_behavior {
+    path_pattern     = "/api/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "API-Gateway"
+
+    forwarded_values {
+      query_string = true
+      cookies {
+        forward = "all"
+      }
+
+      headers = ["Authorization", var.cloudfront_api_header_name]
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+  }
 
   # Restrictions (whitelist US only)
   restrictions {

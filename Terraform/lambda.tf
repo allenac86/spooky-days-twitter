@@ -67,6 +67,8 @@ resource "aws_lambda_function" "spooky_days_gallery_api_lambda_function" {
     variables = {
       DYNAMODB_TABLE_NAME = var.dynamodb_api_table_name
       IMAGE_BUCKET_NAME   = var.image_bucket_name
+      ORIGIN_HEADER_NAME  = var.cloudfront_api_header_name
+      ORIGIN_HEADER_VALUE = var.cloudfront_api_header_value
       TWITTER_SECRET_ARN  = aws_secretsmanager_secret.twitter_secrets.arn
     }
   }

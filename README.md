@@ -77,7 +77,7 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
 - **ESLint** - JavaScript/TypeScript linter for Node.js Lambda
   - Enforces code quality and style for gallery API Lambda
   - Flat config with modern rules
-  - **Pipeline behavior:** ❌ Failures block the pipeline
+  - **Pipeline behavior:** Failures block the pipeline
 
 **2. Testing**
 - **pytest** - Unit testing framework for the Python Lambdas
@@ -88,7 +88,7 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
 - **Jest** - Unit testing framework for the Node.js Lambda
   - Runs unit tests for gallery API Lambda
   - Coverage reporting with LCOV
-  - **Pipeline behavior:** ❌ Test failures block the pipeline
+  - **Pipeline behavior:** Test failures block the pipeline
 - **Coverage Reporting:**
   - Results uploaded to Codecov for tracking
   - Terminal output with missing coverage report
@@ -114,7 +114,7 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
   - Scans Terraform configurations for security misconfigurations
   - Severity threshold: High and Critical
   - Results uploaded to GitHub Security tab (SARIF format)
-- **Pipeline behavior:** ⚠️ Security findings are reported but don't block deployment (continue-on-error)
+- **Pipeline behavior:** Security findings are reported but don't block deployment (continue-on-error)
 
 **4. Build**
 - Package Lambda function code (.zip files)
@@ -124,7 +124,7 @@ The project includes a comprehensive CI/CD pipeline with quality gates, security
 - Upload artifacts to S3
 - Update Terraform Cloud workspace variables
 - Conditional layer publishing (controlled via GitHub variable)
-- **Pipeline behavior:** ❌ Build failures block deployment
+- **Pipeline behavior:** Build failures block deployment
 
 **5. Deploy**
 - Triggers deployment workflow

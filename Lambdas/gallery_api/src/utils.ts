@@ -7,7 +7,11 @@ import {
 } from '@aws-sdk/client-secrets-manager';
 import { TwitterApi } from 'twitter-api-v2';
 
-const logger = new Logger({ serviceName: 'gallery_api_lambda' });const s3 = new S3Client({});const secretsClient = new SecretsManagerClient({});const secretArn = process.env.TWITTER_SECRET_ARN;let twitterClient: TwitterApi | null = null;
+const logger = new Logger({ serviceName: 'gallery_api_lambda' });
+const s3 = new S3Client({});
+const secretsClient = new SecretsManagerClient({});
+const secretArn = process.env.TWITTER_SECRET_ARN;
+let twitterClient: TwitterApi | null = null;
 
 export async function listAllImages(bucket: string): Promise<ImageMetadata[]> {
   logger.info('Listing images from S3', { bucket, prefix: 'images/' });
@@ -18,7 +22,8 @@ export async function listAllImages(bucket: string): Promise<ImageMetadata[]> {
   });
 
   try {
-    const result = await s3.send(command);    const imageCount = result.Contents
+    const result = await s3.send(command);
+    const imageCount = result.Contents
       ? result.Contents.filter((obj) => !obj.Key?.endsWith('/')).length
       : 0;
 
@@ -56,7 +61,13 @@ async function getTwitterCredentials(): Promise<{
   }
 
   try {
-    const command = new GetSecretValueCommand({ SecretId: secretArn });    const response = await secretsClient.send(command);    const credentials = JSON.parse(response.SecretString!);    const apiKey = credentials.API_KEY;    const apiSecret = credentials.API_SECRET;    const accessToken = credentials.ACCESS_TOKEN;    const accessTokenSecret = credentials.ACCESS_TOKEN_SECRET;
+    const command = new GetSecretValueCommand({ SecretId: secretArn });
+    const response = await secretsClient.send(command);
+    const credentials = JSON.parse(response.SecretString!);
+    const apiKey = credentials.API_KEY;
+    const apiSecret = credentials.API_SECRET;
+    const accessToken = credentials.ACCESS_TOKEN;
+    const accessTokenSecret = credentials.ACCESS_TOKEN_SECRET;
 
     if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
       throw new Error('Missing required Twitter credentials in secret');
@@ -99,7 +110,8 @@ export async function getTwitterData(): Promise<any> {
   logger.info('Fetching Twitter user data');
 
   try {
-    const client = await getTwitterClient();    const user = await client.v2.me({ 'user.fields': ['public_metrics'] });
+    const client = await getTwitterClient();
+    const user = await client.v2.me({ 'user.fields': ['public_metrics'] });
 
     logger.info('Twitter user data retrieved successfully',
       {
@@ -115,3 +127,20 @@ export async function getTwitterData(): Promise<any> {
     throw err;
   }
 }
+
+export function validateEnv (logger: Logger) {
+  const missing: string[] = [];
+
+  if (!process.env.IMAGE_BUCKET_NAME) missing.push('IMAGE_BUCKET_NAME');
+  if (!process.env.ORIGIN_HEADER_NAME) missing.push('ORIGIN_HEADER_NAME');
+  if (!process.env.ORIGIN_HEADER_VALUE) missing.push('ORIGIN_HEADER_VALUE');
+
+  if (missing.length === 0) return null;
+
+  logger.error('Missing environment variables', { missing });
+
+  return {
+    statusCode: 500,
+    body: JSON.stringify({ missing }),
+  };
+};

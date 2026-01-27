@@ -209,3 +209,17 @@ variable "domain_aliases" {
   type        = string
   default     = null
 }
+
+variable "cloudfront_api_header_value" {
+  description = "Shared secret header value CloudFront will set when forwarding requests to the API origin"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "cloudfront_api_header_name" {
+  description = "Name of the header CloudFront will set when forwarding requests to the API origin"
+  type        = string
+  sensitive   = true
+  default     = null
+}

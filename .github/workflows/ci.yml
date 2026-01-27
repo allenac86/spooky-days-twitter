@@ -137,8 +137,10 @@ jobs:
       - name: Wait for Security Scan Completion
         run: |
           echo "Waiting for security-scan.yml to complete..."
+
           while true; do
             STATUS=$(gh run list --workflow security-scan.yml --json status --jq '.[0].status')
+
             if [ "$STATUS" = "completed" ]; then
               echo "Security scan completed successfully."
               break
@@ -146,6 +148,7 @@ jobs:
               echo "Security scan failed or was cancelled."
               exit 1
             fi
+
             echo "Still running... checking again in 30 seconds."
             sleep 30
           done
@@ -310,6 +313,7 @@ jobs:
           
           while true; do
             STATUS=$(gh run list --workflow cd.yml --json status --jq '.[0].status')
+
             if [ "$STATUS" = "completed" ]; then
               echo "Deployment completed successfully."
               break
@@ -317,6 +321,7 @@ jobs:
               echo "Deployment failed or was cancelled."
               exit 1
             fi
+
             echo "Still running... checking again in 30 seconds."
             sleep 30
           done

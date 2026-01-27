@@ -28,11 +28,6 @@ jest.mock('twitter-api-v2', () => {
   };
 });
 
-import { TwitterApi } from 'twitter-api-v2';
-
-const mockTwitterApi = (TwitterApi as unknown) as jest.Mock;
-
-
 describe('listCurrentImages', () => {
   let utils: any;
 
@@ -80,5 +75,70 @@ describe('listCurrentImages', () => {
   it('throws on S3 error', async () => {
     mockSend.mockRejectedValueOnce(new Error('S3 error'));
     await expect(utils.listAllImages('test-bucket')).rejects.toThrow('S3 error');
+  });
+});
+
+
+describe('validateEnv', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+    delete process.env.IMAGE_BUCKET_NAME;
+    delete process.env.ORIGIN_HEADER_NAME;
+    delete process.env.ORIGIN_HEADER_VALUE;
+  });
+
+  test('returns null when all env vars present', () => {
+    process.env.IMAGE_BUCKET_NAME = 'bucket';
+    process.env.ORIGIN_HEADER_NAME = 'X-Origin';
+    process.env.ORIGIN_HEADER_VALUE = 'secret';
+
+    const utils = require('../src/utils');
+    const mockLogger = { error: jest.fn() };
+    const result = utils.validateEnv(mockLogger as any);
+    expect(result).toBeNull();
+    expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  test('reports single missing variable', () => {
+    process.env.IMAGE_BUCKET_NAME = 'bucket';
+    // ORIGIN_HEADER_NAME missing
+    process.env.ORIGIN_HEADER_VALUE = 'secret';
+
+    const utils = require('../src/utils');
+    const mockLogger = { error: jest.fn() };
+    const result = utils.validateEnv(mockLogger as any);
+    expect(result).toEqual({
+      statusCode: 500,
+      body: JSON.stringify({ missing: ['ORIGIN_HEADER_NAME'] }),
+    });
+    expect(mockLogger.error).toHaveBeenCalledWith('Missing environment variables', { missing: ['ORIGIN_HEADER_NAME'] });
+  });
+
+  test('reports multiple missing variables with simple array', () => {
+    // only set one
+    process.env.IMAGE_BUCKET_NAME = 'bucket';
+    // ORIGIN_HEADER_NAME and ORIGIN_HEADER_VALUE missing
+
+    const utils = require('../src/utils');
+    const mockLogger = { error: jest.fn() };
+    const result = utils.validateEnv(mockLogger as any);
+    expect(result).toEqual({
+      statusCode: 500,
+      body: JSON.stringify({ missing: ['ORIGIN_HEADER_NAME', 'ORIGIN_HEADER_VALUE'] }),
+    });
+    expect(mockLogger.error).toHaveBeenCalledWith('Missing environment variables', { missing: ['ORIGIN_HEADER_NAME', 'ORIGIN_HEADER_VALUE'] });
+  });
+
+  test('reports three missing variables with array', () => {
+    // nothing set
+    const utils = require('../src/utils');
+    const mockLogger = { error: jest.fn() };
+    const result = utils.validateEnv(mockLogger as any);
+    expect(result).toEqual({
+      statusCode: 500,
+      body: JSON.stringify({ missing: ['IMAGE_BUCKET_NAME', 'ORIGIN_HEADER_NAME', 'ORIGIN_HEADER_VALUE'] }),
+    });
+    expect(mockLogger.error).toHaveBeenCalledWith('Missing environment variables', { missing: ['IMAGE_BUCKET_NAME', 'ORIGIN_HEADER_NAME', 'ORIGIN_HEADER_VALUE'] });
   });
 });

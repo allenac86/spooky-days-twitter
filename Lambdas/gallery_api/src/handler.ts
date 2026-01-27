@@ -1,11 +1,21 @@
-import { getTwitterData, listAllImages } from './utils.js';
+import path from 'node:path';
+import { getTwitterData, listAllImages, validateEnv } from './utils.js';
 import { Logger } from '@aws-lambda-powertools/logger';
 
-const BUCKET = process.env.IMAGE_BUCKET_NAME!;
+const BUCKET: string = process.env.IMAGE_BUCKET_NAME!;
+const ORIGIN_HEADER_NAME: string = process.env.ORIGIN_HEADER_NAME!;
+const ORIGIN_HEADER_VALUE: string = process.env.ORIGIN_HEADER_VALUE!;
 const logger = new Logger({ serviceName: 'gallery_api_lambda' });
 
 export const handler = async (event: any, context: any) => {
+  const envError = validateEnv(logger);
+
+  if (envError) return envError;
+
   const path = event.path;
+  const originHeader = event?.headers
+    ? event.headers[ORIGIN_HEADER_NAME]
+    : undefined;
 
   logger.info('Handler invoked', { path, bucket: BUCKET });
 
@@ -18,17 +28,19 @@ export const handler = async (event: any, context: any) => {
     };
   }
 
-  if (!BUCKET) {
-    logger.error('IMAGE_BUCKET_NAME environment variable not set');
+
+  if (!originHeader || originHeader !== ORIGIN_HEADER_VALUE) {
+    logger.warn('Forbidden - missing or invalid origin header',
+      { hasHeader: !!originHeader });
 
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'IMAGE_BUCKET_NAME not set' }),
+      statusCode: 403,
+      body: JSON.stringify({ error: 'Forbidden' })
     };
   }
 
   try {
-    if (path === '/get-image-data') {
+    if (path === '/api/get-image-data') {
       const images = await listAllImages(BUCKET);
 
       logger.info('Images retrieved successfully', { imageCount: images.length });
@@ -37,7 +49,7 @@ export const handler = async (event: any, context: any) => {
         statusCode: 200,
         body: JSON.stringify({ images }),
       };
-    } else if (path === '/get-twitter-data') {
+    } else if (path === '/api/get-twitter-data') {
       const twitterData = await getTwitterData();
 
       logger.info('Twitter data retrieved successfully', { userId: twitterData.id });
