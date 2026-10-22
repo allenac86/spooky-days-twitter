@@ -7,7 +7,7 @@
 
 A serverless application that generates images of various "National Days" with a spooky twist using OpenAI's DALL-E 3 and automatically posts them to Twitter (X) Monday through Friday at 8:00 AM EST.
 
-**Status:** 🟢 Live and actively posting
+**Status:** 🟢 Live - Images no longer being generated or posted
 
 ## Architecture
 
